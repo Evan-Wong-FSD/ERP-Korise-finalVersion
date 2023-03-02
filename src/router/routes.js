@@ -29,6 +29,11 @@ const routes = [
         component: () => import('pages/materialsList/materialsList.vue')
       },
       {
+        path: '/物料清單2',
+        name: '物料清單2',
+        component: () => import('pages/materialsList2/Index.vue')
+      },
+      {
         path: '/材料資料',
         name: '材料資料',
         component: () => import('pages/materialsInform/materialsInformRecord.vue')
@@ -41,11 +46,6 @@ const routes = [
       {
         path: '/產品種類',
         name: '產品種類',
-        component: () => import('pages/ProductClassification/ProductClassification.vue')
-      },
-      {
-        path: '/產品種類2',
-        name: '產品種類2',
         component: () => import('pages/ProductClassification/Index.vue')
       }
     ]

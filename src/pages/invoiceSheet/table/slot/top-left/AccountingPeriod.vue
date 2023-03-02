@@ -1,9 +1,9 @@
 <template>
   <section>
     <q-btn-dropdown label="會計期間" icon="schedule" :color="btnColor" v-model="btnDropdown">
+      <!-- @reset="onReset(resetAccountingPeriod, updateGeneralTableData)" -->
       <q-form
         @submit="onSubmit(yearOfROC, months, updateAccountingPeriod, updateGeneralTableData)"
-        @reset="onReset(resetAccountingPeriod, updateGeneralTableData)"
         class="q-pa-sm"
       >
         <q-input
@@ -23,7 +23,8 @@
         />
 
         <div class="row items-center justify-end q-gutter-sm">
-          <q-btn dense label="取消" color="primary" flat type="reset" />
+          <!-- type="reset" -->
+          <q-btn dense label="取消" color="primary" flat @click="btnDropdown = false" />
           <q-btn dense label="確定" color="primary" flat type="submit" />
         </div>
       </q-form>
@@ -38,7 +39,7 @@ export default {
   data () {
     return {
       btnDropdown: false,
-      monthsOptions: ['1-2月', '3-4月', '5-6月', '7-8月', '9-10月', '11-12月'],
+      monthsOptions: ['01-02', '03-04', '05-06', '07-08', '09-10', '11-12'],
       yearOfROC: '',
       months: ''
     }
@@ -70,19 +71,19 @@ export default {
         updateGeneralTableData(generalTableData)
       })
     },
-    async onReset (resetAccountingPeriod, updateGeneralTableData) {
-      await resetAccountingPeriod()
-      this.yearOfROC = ''
-      this.months = ''
-      this.btnDropdown = false
-      invoiceSheetAPI.post('/api/readInvoiceRecord', {
-        selectedPeriodName: this.selectedPeriodName,
-        searchItem: this.searchItem
-      }).then(res => {
-        const { generalTableData } = res.data
-        updateGeneralTableData(generalTableData)
-      })
-    },
+    // async onReset (resetAccountingPeriod, updateGeneralTableData) {
+    //   await resetAccountingPeriod()
+    //   this.yearOfROC = ''
+    //   this.months = ''
+    //   this.btnDropdown = false
+    //   invoiceSheetAPI.post('/api/readInvoiceRecord', {
+    //     selectedPeriodName: this.selectedPeriodName,
+    //     searchItem: this.searchItem
+    //   }).then(res => {
+    //     const { generalTableData } = res.data
+    //     updateGeneralTableData(generalTableData)
+    //   })
+    // },
     resetAccountingPeriodOnGlobalEventBus () {
       this.$root.$on('resetAccountingPeriod', () => {
         this.resetAccountingPeriod()

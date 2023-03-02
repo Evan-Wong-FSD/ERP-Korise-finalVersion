@@ -3,7 +3,8 @@ const mongodb = require('mongodb')
 const MongoClient = mongodb.MongoClient
 
 const workbook = new ExcelJS.Workbook()
-const filename = 'H:/卓面/瑋安企業/料號管理/廠商資料.xlsx'
+// const filename = '/Volumes/ADATA UFD/卓面/瑋安企業/料號管理/廠商資料.xlsx'
+const filename = '/Volumes/ADATA UFD/卓面/瑋安企業/料號管理/classifyMaterialSerialNumbers/2021-2023發票資料/待補資料/廠商資料finished.xlsx'
 const firmInforms = []
 const contactPersonInforms = []
 
@@ -18,9 +19,10 @@ const contactPersonInforms = []
       firmInform: firmInforms[index]
     }
   })
-  console.log(document)
-  MongoClient.connect('mongodb://127.0.0.1:12345', { useUnifiedTopology: true }, async function (err0, client) {
+  // console.log(document)
+  MongoClient.connect('mongodb://127.0.0.1:27017', { useUnifiedTopology: true }, async function (err0, client) {
     try {
+      await client.db('ERP').collection('firmInform').deleteMany({})
       await client.db('ERP').collection('firmInform').insertMany(document)
       client.close()
     } catch (err0) {
@@ -33,7 +35,7 @@ const contactPersonInforms = []
 function createFirmInform () {
   const worksheet = workbook.getWorksheet('firmInform')
   const columns = worksheet.getRow(2).values.filter(elem => elem)
-  const faxIndex = columns.indexOf('傳真'), telephoneIndex = columns.indexOf('公司電話')
+  const faxIndex = columns.indexOf('傳真國際區號'), telephoneIndex = columns.indexOf('電話國際區號')
   const columnsWithNumber = columns.reduce((total, elem, index) => {
     return Object.assign(total, Object.fromEntries([[index + 1, elem]]))
   }, {})
@@ -42,10 +44,10 @@ function createFirmInform () {
       const firmInform = columns.map(elem => [elem, null])
       row.eachCell((cell, colNumber) => {
         const columnIndex = firmInform.findIndex(elem => elem[0] === columnsWithNumber[colNumber])
-        firmInform[columnIndex][1] = cell.value
+        firmInform[columnIndex][1] = String(cell.value)
       })
-      const fax = ['傳真', Object.fromEntries(firmInform.slice(faxIndex, faxIndex + 2 + 1))]
-      const telephone = ['公司電話', Object.fromEntries(firmInform.slice(telephoneIndex, telephoneIndex + 2 + 1))]
+      const fax = ['傳真國際區號', Object.fromEntries(firmInform.slice(faxIndex, faxIndex + 2 + 1))]
+      const telephone = ['電話國際區號', Object.fromEntries(firmInform.slice(telephoneIndex, telephoneIndex + 2 + 1))]
       firmInform.splice(faxIndex, 3, fax)
       firmInform.splice(telephoneIndex - 2, 3, telephone)
       firmInforms.push(Object.fromEntries(firmInform))

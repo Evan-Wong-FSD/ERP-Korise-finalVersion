@@ -71,7 +71,8 @@ export default {
         { label: '產品名稱', value: 'productName' },
         { label: '型號', value: 'model' },
         { label: 'Project code', value: 'projectCode' },
-        { label: '備註 (選填)', value: 'remark' }
+        { label: '備註', value: 'remark' }
+
       ],
       searchTypeIn: ''
     }

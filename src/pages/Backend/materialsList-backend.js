@@ -26,7 +26,7 @@ export function materialsListBackend () {
   })
 
   app.post('/api/getRowsData', function (req, res) {
-    MongoClient.connect('mongodb://127.0.0.1:12345', { useUnifiedTopology: true }, function (err0, client) {
+    MongoClient.connect('mongodb://127.0.0.1:27017', { useUnifiedTopology: true }, function (err0, client) {
       if (!err0) {
         const { materialsInform } = req.body
         client.db('ERP').collection('materialsList').aggregate([{ $match: materialsInform }]).toArray((err1, document) => {
@@ -51,7 +51,7 @@ export function materialsListBackend () {
   })
 
   app.post('/api/initializeForTree', function (req, res) {
-    MongoClient.connect('mongodb://127.0.0.1:12345', { useUnifiedTopology: true }, function (err0, client) {
+    MongoClient.connect('mongodb://127.0.0.1:27017', { useUnifiedTopology: true }, function (err0, client) {
       if (!err0) {
         client.db('ERP').collection('materialsInform').aggregate([{ $project: { _id: 0, 統編: 1, 公司名稱: 1, 產品名稱: 1, 型號: 1 } }]).toArray((err1, document) => {
           if (!err1) {
@@ -75,7 +75,7 @@ export function materialsListBackend () {
   })
 
   app.post('/api/createMaterial', function (req, res) {
-    MongoClient.connect('mongodb://127.0.0.1:12345', { useUnifiedTopology: true }, async function (err0, client) {
+    MongoClient.connect('mongodb://127.0.0.1:27017', { useUnifiedTopology: true }, async function (err0, client) {
       try {
         const { materialInform } = req.body
         await client.db('ERP').collection('materialsList').insertOne(materialInform)
@@ -90,7 +90,7 @@ export function materialsListBackend () {
   })
 
   app.post('/api/updateMaterial', function (req, res) {
-    MongoClient.connect('mongodb://127.0.0.1:12345', { useUnifiedTopology: true }, async function (err0, client) {
+    MongoClient.connect('mongodb://127.0.0.1:27017', { useUnifiedTopology: true }, async function (err0, client) {
       try {
         const { materialInform } = req.body
         materialInform._id = new ObjectID(materialInform._id)
@@ -107,7 +107,7 @@ export function materialsListBackend () {
 
   io.on('connection', (socket) => {
     socket.on('delete', (frontendData) => {
-      MongoClient.connect('mongodb://127.0.0.1:12345', { useUnifiedTopology: true }, function (err0, client) {
+      MongoClient.connect('mongodb://127.0.0.1:27017', { useUnifiedTopology: true }, function (err0, client) {
         if (!err0) {
           (async () => {
             await client.db('ERP').collection('materialsList').deleteOne({ _id: new mongodb.ObjectID(frontendData.tableSelectedID) })

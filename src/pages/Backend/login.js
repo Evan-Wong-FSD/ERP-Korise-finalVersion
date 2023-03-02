@@ -26,8 +26,8 @@ export function login () {
 
   app.post('/api/login', function (req, res) {
     const { username, password } = req.body
-    if (username === process.env.USER && password === process.env.PASS) {
-      res.cookie('userId', process.env.USER, {
+    if (username === process.env.ACCOUNT && password === process.env.PASS) {
+      res.cookie('userId', process.env.ACCOUNT, {
         signed: true,
         httpOnly: true,
         expires: new Date(Date.now() + (7 * 24 * 60 * 60 * 1000))

@@ -1,16 +1,16 @@
 @font-face {
     font-family: Medium500;
-    src: url(F:/project/erp/src/layouts/CSS/Noto_Sans_TC/NotoSansTC-Medium.otf);
+    src: url(https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@500&display=swap);
   }
 
 // @font-face {
 //     font-family: Bold700;
-//     src: url(F:/project/erp/src/layouts/CSS/Noto_Sans_TC/NotoSansTC-Bold.otf);
+//     src: url(/Users/evan/MyDriver/Korise/projects/ERP-Korise/src/layouts/CSS/Noto_Sans_TC/NotoSansTC-Bold.otf);
 // }
 
 // @font-face {
 //     font-family: Black900;
-//     src: url(F:/project/erp/src/layouts/CSS/Noto_Sans_TC/NotoSansTC-Black.otf);
+//     src: url(/Users/evan/MyDriver/Korise/projects/ERP-Korise/src/layouts/CSS/Noto_Sans_TC/NotoSansTC-Black.otf);
 // }
 
 @mixin color ($color) {

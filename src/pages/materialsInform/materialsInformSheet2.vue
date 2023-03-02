@@ -45,6 +45,8 @@ export default {
         { name: 'productClass', label: '產品種類', align: 'center', field: 'productClass' },
         { name: 'productSubclass', label: '產品材質', align: 'center', field: 'productSubclass' },
         { name: 'productName', label: '產品名稱', align: 'center', field: 'productName' },
+        { name: 'caliber', label: '管材口徑', align: 'center', field: 'caliber' },
+        { name: 'pipeMaterialName', label: '管材名稱', align: 'center', field: 'pipeMaterialName' },
         { name: 'productPartNumber', label: '產品料號', align: 'center', field: 'productPartNumber' },
         { name: 'model', label: '型號', align: 'center', field: 'model' },
         { name: 'description', label: '描述', align: 'center', field: 'description' },

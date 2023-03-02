@@ -66,9 +66,10 @@ export default {
         { name: 'date', label: '時間', field: 'date', align: 'center' },
         { name: 'taxIdNumbers', label: '統編', field: 'taxIdNumbers', align: 'center' },
         { name: 'salesFigures', label: '銷售額', field: 'salesFigures', align: 'center', format: val => `$${numberWithCommas(val)}` },
-        { name: 'tax', label: '稅額', field: 'tax', align: 'center', format: val => `$${numberWithCommas(val)}` },
+        { name: 'tax', label: '稅金', field: 'tax', align: 'center', format: val => `$${numberWithCommas(val)}` },
         { name: 'summary', label: '總額', field: 'summary', align: 'center', format: val => `$${numberWithCommas(val)}` },
-        { name: 'invoiceType', label: '發票種類', field: 'invoiceType', align: 'center' }
+        { name: 'invoiceType', label: '發票種類', field: 'invoiceType', align: 'center' },
+        { name: 'remark', label: '備註', field: 'remark', align: 'center' }
       ],
       numberWithCommas
     }

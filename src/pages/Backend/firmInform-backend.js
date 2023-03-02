@@ -25,7 +25,7 @@ export function firmInformBackend () {
   })
 
   app.post('/api/filterFirmKeyInform', function (req, res) {
-    MongoClient.connect('mongodb://127.0.0.1:12345', { useUnifiedTopology: true }, function (err0, client) {
+    MongoClient.connect('mongodb://127.0.0.1:27017', { useUnifiedTopology: true }, function (err0, client) {
       if (err0) {
         console.log('Error => ', err0)
         client.close()
@@ -48,7 +48,7 @@ export function firmInformBackend () {
   })
 
   app.post('/api/getBasicFirmInfrom', (req, res) => {
-    MongoClient.connect('mongodb://127.0.0.1:12345', { useUnifiedTopology: true }, function (err0, client) {
+    MongoClient.connect('mongodb://127.0.0.1:27017', { useUnifiedTopology: true }, function (err0, client) {
       if (err0) {
         console.log('Error => ', err0)
         client.close()
@@ -102,7 +102,7 @@ export function firmInformBackend () {
   })
 
   app.post('/api/initializeForSheet', function (req, res) {
-    MongoClient.connect('mongodb://127.0.0.1:12345', { useUnifiedTopology: true }, function (err0, client) {
+    MongoClient.connect('mongodb://127.0.0.1:27017', { useUnifiedTopology: true }, function (err0, client) {
       if (!err0) {
         client.db('ERP').collection('firmInform').aggregate([{ $match: {} }]).toArray((err1, document) => {
           if (!err1) {
@@ -125,7 +125,7 @@ export function firmInformBackend () {
   })
 
   app.post('/api/initializeForRecord', function (req, res) {
-    MongoClient.connect('mongodb://127.0.0.1:12345', { useUnifiedTopology: true }, function (err0, client) {
+    MongoClient.connect('mongodb://127.0.0.1:27017', { useUnifiedTopology: true }, function (err0, client) {
       if (!err0) {
         const { taxIdNumExist, _id = '', taxIdNumber = '' } = req.body
         if (taxIdNumExist) {
@@ -175,7 +175,7 @@ export function firmInformBackend () {
 
   io.on('connection', (socket) => {
     socket.on('submit', (frontendData) => {
-      MongoClient.connect('mongodb://127.0.0.1:12345', { useUnifiedTopology: true }, function (err0, client) {
+      MongoClient.connect('mongodb://127.0.0.1:27017', { useUnifiedTopology: true }, function (err0, client) {
         if (!err0) {
           const { firmInformData } = frontendData
           const trimSpace = (inform) => {
@@ -213,7 +213,7 @@ export function firmInformBackend () {
       })
     })
     socket.on('delete', (frontendData) => {
-      MongoClient.connect('mongodb://127.0.0.1:12345', { useUnifiedTopology: true }, function (err0, client) {
+      MongoClient.connect('mongodb://127.0.0.1:27017', { useUnifiedTopology: true }, function (err0, client) {
         if (!err0) {
           (async () => {
             await client.db('ERP').collection('firmInform').deleteOne({ _id: new mongodb.ObjectID(frontendData._id) })

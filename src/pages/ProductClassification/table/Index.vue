@@ -22,7 +22,7 @@
 
 <script>
 import { mapState, mapMutations } from 'vuex'
-import { ProductClassificationAPI2 } from 'boot/axios'
+import { ProductClassificationAPI } from 'boot/axios'
 import SlotTop from 'src/pages/ProductClassification/table/slot/top/Index.vue'
 export default {
   components: {
@@ -36,9 +36,9 @@ export default {
         { name: 'taxIdNumber', align: 'left', label: '統編', field: 'taxIdNumber' },
         { name: 'firm', align: 'left', label: '公司名稱', field: 'firm' },
         { name: 'productClass', align: 'left', label: '產品種類', field: 'productClass' },
-        { name: 'productClassCode', align: 'left', label: '種類料號', field: 'productClassCode', sortable: true },
+        { name: 'productPartNumber', align: 'left', label: '種類料號', field: 'productPartNumber', sortable: true },
         { name: 'productSubclass', align: 'left', label: '產品材質', field: 'productSubclass' },
-        { name: 'productSubclassCode', align: 'left', label: '材質料號', field: 'productSubclassCode', sortable: true }
+        { name: 'productSubclassPartNumber', align: 'left', label: '材質料號', field: 'productSubclassPartNumber', sortable: true }
       ],
       pagination: {
         page: 1,
@@ -75,7 +75,7 @@ export default {
     initTableData () {
       const { pagination, filter } = this
       this.loading = true
-      ProductClassificationAPI2.get('/api/calculateRowsNumber', { params: { filter } }).then(res => {
+      ProductClassificationAPI.get('/api/calculateRowsNumber', { params: { filter } }).then(res => {
         pagination.rowsNumber = res.data.rowsNumber
         this.onRequest({ pagination, filter })
       })
@@ -86,7 +86,7 @@ export default {
       Object.assign(this.pagination, pagination)
       const { oldRowsRendered, newRowsRendered, columns } = this
       this.loading = true
-      ProductClassificationAPI2.post('/api/obtainTableData', { oldRowsRendered, newRowsRendered, pagination, filter, columns }).then(res => {
+      ProductClassificationAPI.post('/api/obtainTableData', { oldRowsRendered, newRowsRendered, pagination, filter, columns }).then(res => {
         this.loadTableData(res.data.tableData)
         this.loading = false
       })
@@ -108,7 +108,7 @@ export default {
       this.$root.$on('deleteTableData', () => {
         if (this.selected.length) {
           const { id } = this.selected[0]
-          ProductClassificationAPI2.get('/api/deleteProductClass', { params: { id } }).then(res => {
+          ProductClassificationAPI.get('/api/deleteProductClass', { params: { id } }).then(res => {
             this.initTableData()
             this.$root.$emit('resetControlInputs')
             this.resetSelectedOnTable()

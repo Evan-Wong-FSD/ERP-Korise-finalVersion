@@ -5,6 +5,7 @@ import bomTable from './bomTable'
 import invoiceSheet from './invoiceSheet'
 import invoiceRecord from './invoiceRecord'
 import materialsInform from './materialsInform'
+import materialsList from './materialsList'
 import productClassification from './productClassification'
 
 Vue.use(Vuex)
@@ -25,6 +26,7 @@ export default function (/* { ssrContext } */) {
       invoiceSheet,
       invoiceRecord,
       materialsInform,
+      materialsList,
       productClassification
     },
 

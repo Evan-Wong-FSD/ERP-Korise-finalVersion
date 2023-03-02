@@ -26,7 +26,7 @@ export function bomSheetBackend () {
   })
 
   app.post('/api/deleteFrequentlyUsedProductClass', function (req, res) {
-    MongoClient.connect('mongodb://127.0.0.1:12345', { useUnifiedTopology: true }, async function (err0, client) {
+    MongoClient.connect('mongodb://127.0.0.1:27017', { useUnifiedTopology: true }, async function (err0, client) {
       if (err0) {
         console.log(err0)
         client.close()
@@ -39,7 +39,7 @@ export function bomSheetBackend () {
   })
 
   app.post('/api/frequentlyUsedProductClassLabel', function (req, res) {
-    MongoClient.connect('mongodb://127.0.0.1:12345', { useUnifiedTopology: true }, function (err0, client) {
+    MongoClient.connect('mongodb://127.0.0.1:27017', { useUnifiedTopology: true }, function (err0, client) {
       if (err0) {
         console.log(err0)
         client.close()
@@ -64,7 +64,7 @@ export function bomSheetBackend () {
   })
 
   app.post('/api/productClassData', function (req, res) {
-    MongoClient.connect('mongodb://127.0.0.1:12345', { useUnifiedTopology: true }, function (err0, client) {
+    MongoClient.connect('mongodb://127.0.0.1:27017', { useUnifiedTopology: true }, function (err0, client) {
       if (err0) {
         console.log(err0)
         client.close()
@@ -85,7 +85,7 @@ export function bomSheetBackend () {
   })
 
   app.post('/api/newFrequentlyUsedProductClass', function (req, res) {
-    MongoClient.connect('mongodb://127.0.0.1:12345', { useUnifiedTopology: true }, async function (err0, client) {
+    MongoClient.connect('mongodb://127.0.0.1:27017', { useUnifiedTopology: true }, async function (err0, client) {
       if (err0) {
         console.log('Error => ', err0)
         client.close()
@@ -118,7 +118,7 @@ export function bomSheetBackend () {
   })
 
   app.post('/api/updateProductClass', function (req, res) {
-    MongoClient.connect('mongodb://127.0.0.1:12345', { useUnifiedTopology: true }, async function (err0, client) {
+    MongoClient.connect('mongodb://127.0.0.1:27017', { useUnifiedTopology: true }, async function (err0, client) {
       try {
         const { frequentlyUsedSelect, productClassData } = req.body
         res.end()
@@ -148,7 +148,7 @@ export function bomSheetBackend () {
       }
     }
 
-    MongoClient.connect('mongodb://127.0.0.1:12345', { useUnifiedTopology: true }, function (err0, client) {
+    MongoClient.connect('mongodb://127.0.0.1:27017', { useUnifiedTopology: true }, function (err0, client) {
       if (err0) {
         console.error(err0)
         client.close()
@@ -222,7 +222,7 @@ export function bomSheetBackend () {
       }
     }
 
-    MongoClient.connect('mongodb://127.0.0.1:12345', { useUnifiedTopology: true }, function (err0, client) {
+    MongoClient.connect('mongodb://127.0.0.1:27017', { useUnifiedTopology: true }, function (err0, client) {
       if (err0) {
         console.error(err0)
         client.close()
@@ -342,7 +342,7 @@ export function bomSheetBackend () {
         if (index === arr.length - 1) cost.push({ ...costPackage })
       })
 
-      MongoClient.connect('mongodb://127.0.0.1:12345', { useUnifiedTopology: true }, function (err0, client) {
+      MongoClient.connect('mongodb://127.0.0.1:27017', { useUnifiedTopology: true }, function (err0, client) {
         if (err0) {
           console.error(err0)
           client.close()
@@ -645,7 +645,7 @@ export function bomSheetBackend () {
   })
 
   app.post('/api/obtainBomData', function (req, res) {
-    MongoClient.connect('mongodb://127.0.0.1:12345', { useUnifiedTopology: true }, function (err0, client) {
+    MongoClient.connect('mongodb://127.0.0.1:27017', { useUnifiedTopology: true }, function (err0, client) {
       if (err0) {
         console.error(err0)
         client.close()
@@ -665,7 +665,7 @@ export function bomSheetBackend () {
   })
 
   app.post('/api/deleteBomData', function (req, res) {
-    MongoClient.connect('mongodb://127.0.0.1:12345', { useUnifiedTopology: true }, async function (err0, client) {
+    MongoClient.connect('mongodb://127.0.0.1:27017', { useUnifiedTopology: true }, async function (err0, client) {
       if (err0) {
         console.error(err0)
         client.close()

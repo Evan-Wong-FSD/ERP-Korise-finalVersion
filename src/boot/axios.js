@@ -6,10 +6,10 @@ Vue.prototype.$axios = axios
 //       so you won't necessarily have to import axios in each vue file
 
 const firmInformAPI = axios.create({ baseURL: 'http://localhost:3001/' })
-const ProductClassificationAPI = axios.create({ baseURL: 'http://localhost:3002/' })
-const ProductClassificationAPI2 = axios.create({ baseURL: 'http://localhost:3008/' })
+const ProductClassificationAPI = axios.create({ baseURL: 'http://localhost:3008/' })
 const materialsInformtAPI = axios.create({ baseURL: 'http://localhost:3003/' })
 const materialsListAPI = axios.create({ baseURL: 'http://localhost:3004/' })
+const materialsListAPI2 = axios.create({ baseURL: 'http://localhost:3009/' })
 const invoiceSheetAPI = axios.create({ baseURL: 'http://localhost:3005/' })
 const bomSheet = axios.create({ baseURL: 'http://localhost:3006/' })
 const login = axios.create({ baseURL: 'http://localhost:3007/' })
@@ -18,4 +18,14 @@ const login = axios.create({ baseURL: 'http://localhost:3007/' })
 // ^ ^ ^ this will allow you to use this.$api
 //       so you can easily perform requests against your app's API
 
-export { axios, ProductClassificationAPI, materialsInformtAPI, materialsListAPI, invoiceSheetAPI, firmInformAPI, bomSheet, login, ProductClassificationAPI2 }
+export {
+  axios,
+  materialsInformtAPI,
+  materialsListAPI,
+  invoiceSheetAPI,
+  firmInformAPI,
+  bomSheet,
+  login,
+  ProductClassificationAPI,
+  materialsListAPI2
+}

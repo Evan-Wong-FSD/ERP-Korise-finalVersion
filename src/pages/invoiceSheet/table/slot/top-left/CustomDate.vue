@@ -5,7 +5,8 @@
     <q-popup-proxy transition-show="scale" transition-hide="scale">
       <q-date multiple v-model="customDate">
         <div class="row items-center justify-end q-gutter-sm">
-          <q-btn label="取消" color="primary" flat v-close-popup @click="onReset(resetCustomDate, resetGeneralTableData, updateGeneralTableData)" />
+          <!-- @click="onReset(resetCustomDate, resetGeneralTableData)" -->
+          <q-btn label="取消" color="primary" flat v-close-popup />
           <q-btn label="確定" color="primary" flat v-close-popup @click="onSubmit(customDate, updateGeneralTableData)" />
         </div>
       </q-date>
@@ -36,12 +37,12 @@ export default {
     ...mapMutations('invoiceSheet', {
       updateCustomDate: 'updateCustomDate',
       resetCustomDate: 'resetCustomDate',
-      updateGeneralTableData: 'updateGeneralTableData',
-      resetGeneralTableData: 'resetGeneralTableData'
+      updateGeneralTableData: 'updateGeneralTableData'
+      // resetGeneralTableData: 'resetGeneralTableData'
     }),
     onSubmit (customDate, updateGeneralTableData) {
       if (customDate.length > 0) {
-        const timeStampDiffBetweenNowAndROC = 60305414760000
+        const timeStampDiffBetweenNowAndROC = 60305413002000
         this.$root.$emit('resetAccountingPeriod')
         const customDateFromROC = []
         customDate.forEach(elem => {
@@ -59,18 +60,11 @@ export default {
         })
       }
     },
-    onReset (resetCustomDate, resetGeneralTableData, updateGeneralTableData) {
-      this.customDate = []
-      resetCustomDate()
-      resetGeneralTableData()
-      invoiceSheetAPI.post('/api/readInvoiceRecord', {
-        selectedPeriodName: this.selectedPeriodName,
-        searchItem: this.searchItem
-      }).then(res => {
-        const { generalTableData } = res.data
-        updateGeneralTableData(generalTableData)
-      })
-    },
+    // onReset (resetCustomDate, resetGeneralTableData) {
+    //   this.customDate = []
+    //   resetCustomDate()
+    //   resetGeneralTableData()
+    // },
     resetCustomDateOnGlobalEventBus () {
       this.$root.$on('resetCustomDate', () => {
         this.customDate = []

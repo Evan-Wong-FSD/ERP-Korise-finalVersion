@@ -1,5 +1,9 @@
+import { numberWithCommas } from '../../method/numberWithCommas.js'
+import { roundToTwo } from '../../method/roundToTwo.js'
+
 export function invoiceRecordBackend () {
   const express = require('express')
+  const ExcelJS = require('exceljs')
   const app = express()
   const http = require('http').Server(app)
   var io = require('socket.io')(http, {
@@ -25,7 +29,7 @@ export function invoiceRecordBackend () {
   })
 
   app.post('/api/initializeForRecord', function (req, res) {
-    MongoClient.connect('mongodb://127.0.0.1:12345', { useUnifiedTopology: true }, function (err0, client) {
+    MongoClient.connect('mongodb://127.0.0.1:27017', { useUnifiedTopology: true }, function (err0, client) {
       if (!err0) {
         client.db('ERP').collection('materialsInform').aggregate([{ $project: { _id: 0, 統編: 1, 公司名稱: 1 } }]).toArray((err1, document) => {
           if (!err1) {
@@ -56,7 +60,7 @@ export function invoiceRecordBackend () {
       res.end()
       return
     }
-    MongoClient.connect('mongodb://127.0.0.1:12345', { useUnifiedTopology: true }, function (err0, client) {
+    MongoClient.connect('mongodb://127.0.0.1:27017', { useUnifiedTopology: true }, function (err0, client) {
       if (err0) {
         client.close()
         console.error(err0)
@@ -64,7 +68,7 @@ export function invoiceRecordBackend () {
       }
 
       const generalTableData = []
-      const fieldKeys = ['進銷項', '期年', '期數', '公司名稱', '發票號', '時間', '統編', '複價', '發票種類']
+      const fieldKeys = ['進銷項', '期年', '期數', '公司名稱', '發票號', '時間', '統編', '複價', '稅金', '發票種類', '備註']
       const $group = fieldKeys.reduce((total, elem) => {
         return Object.assign(total, Object.fromEntries([[elem, { $push: `$${elem}` }]]))
       }, { _id: null })
@@ -81,7 +85,7 @@ export function invoiceRecordBackend () {
             verify('customDateMatch')
           } else if (selectedPeriodName === 'accountingPeriod') {
             const { yearOfROC, months } = accountingPeriod
-            Object.assign($match, { 期年: yearOfROC, 期數: months })
+            Object.assign($match, { 期年: String(Number(yearOfROC) + 1911), 期數: months })
           }
         } else if (item === 'purchaseSalesSelected') {
           if (purchaseSalesSelected.value !== 'all') $match.進銷項 = purchaseSalesSelected.label
@@ -110,10 +114,14 @@ export function invoiceRecordBackend () {
               this.invoiceNumber = field.發票號
               this.date = field.時間
               this.taxIdNumbers = field.統編
-              this.salesFigures = field.銷售額
-              this.tax = String(Math.round(field.銷售額 * 0.05))
-              this.summary = String(Math.round(field.銷售額 * 1.05))
+              this.salesFigures = roundToTwo(field.銷售額)
+              // this.tax = field.銷售額 < 500 ? '0' : String(roundToTwo(field.銷售額 * 0.05))
+              this.tax = field.稅金
+              // this.summary = field.銷售額 < 500 ? String(roundToTwo(field.銷售額)) : String(roundToTwo(field.銷售額 * 1.05))
+              // this.summary = field.銷售額 < 500 ? String(roundToTwo(field.銷售額)) : String(roundToTwo(Number(field.銷售額) + Number(field.稅金)))
+              this.summary = String(roundToTwo(Number(field.銷售額) + Number(field.稅金)))
               this.invoiceType = field.發票種類
+              this.remark = field.備註
             }
           }
           unitInvoiceNumbers.forEach(unitNumber => {
@@ -134,7 +142,7 @@ export function invoiceRecordBackend () {
   })
 
   app.post('/api/deleteInvoiceRecord', function (req, res) {
-    MongoClient.connect('mongodb://127.0.0.1:12345', { useUnifiedTopology: true }, async function (err0, client) {
+    MongoClient.connect('mongodb://127.0.0.1:27017', { useUnifiedTopology: true }, async function (err0, client) {
       if (err0) {
         client.close()
         console.error(err0)
@@ -150,7 +158,7 @@ export function invoiceRecordBackend () {
   })
 
   app.post('/api/readInvoiceDetaill', function (req, res) {
-    MongoClient.connect('mongodb://127.0.0.1:12345', { useUnifiedTopology: true }, function (err0, client) {
+    MongoClient.connect('mongodb://127.0.0.1:27017', { useUnifiedTopology: true }, function (err0, client) {
       try {
         const { generalDataItemSelected, invoiceDetaillTableColumns } = req.body, { invoiceNumber, purchaseSalesItem } = generalDataItemSelected
         const $project = {}, $match = { 發票號: invoiceNumber, 進銷項: purchaseSalesItem }
@@ -183,7 +191,7 @@ export function invoiceRecordBackend () {
   })
 
   app.post('/api/updateInvoiceDetaill', function (req, res) {
-    MongoClient.connect('mongodb://127.0.0.1:12345', { useUnifiedTopology: true }, function (err0, client) {
+    MongoClient.connect('mongodb://127.0.0.1:27017', { useUnifiedTopology: true }, function (err0, client) {
       try {
         const { invoiceDetaillSelected } = req.body, _id = invoiceDetaillSelected[0]._id
         client.db('ERP').collection('invoiceRecord').aggregate([{ $match: { _id: new ObjectId(_id) } }]).toArray((err1, document) => {
@@ -207,7 +215,7 @@ export function invoiceRecordBackend () {
   })
 
   app.post('/api/deleteInvoiceDetaill', function (req, res) {
-    MongoClient.connect('mongodb://127.0.0.1:12345', { useUnifiedTopology: true }, async function (err0, client) {
+    MongoClient.connect('mongodb://127.0.0.1:27017', { useUnifiedTopology: true }, async function (err0, client) {
       try {
         const { invoiceDetaillSelected } = req.body
         const _idInvoiceDetaill = invoiceDetaillSelected.map(elem => new ObjectId(elem._id))
@@ -223,7 +231,7 @@ export function invoiceRecordBackend () {
   })
 
   app.post('/api/updateInvoiceRecord', function (req, res) {
-    MongoClient.connect('mongodb://127.0.0.1:12345', { useUnifiedTopology: true }, async function (err0, client) {
+    MongoClient.connect('mongodb://127.0.0.1:27017', { useUnifiedTopology: true }, async function (err0, client) {
       try {
         const { _id, firstPage, secondPage } = req.body.invoiceRecord, { 單價, 數量 } = secondPage
         delete firstPage.blank
@@ -241,7 +249,7 @@ export function invoiceRecordBackend () {
   })
 
   app.post('/api/getFirmInformOptions', function (req, res) {
-    MongoClient.connect('mongodb://127.0.0.1:12345', { useUnifiedTopology: true }, function (err0, client) {
+    MongoClient.connect('mongodb://127.0.0.1:27017', { useUnifiedTopology: true }, function (err0, client) {
       try {
         const { label, typeInValue } = req.body
         const $addFields = { display: { $regexMatch: { input: `$firmInform.${label}`, regex: typeInValue, options: 'i' } } }
@@ -266,7 +274,7 @@ export function invoiceRecordBackend () {
   })
 
   app.post('/api/getPermissionForNextStep', function (req, res) {
-    MongoClient.connect('mongodb://127.0.0.1:12345', { useUnifiedTopology: true }, function (err0, client) {
+    MongoClient.connect('mongodb://127.0.0.1:27017', { useUnifiedTopology: true }, function (err0, client) {
       try {
         const { taxIdNumber, invoiceNumber } = req.body
         new Promise((resolve) => {
@@ -305,7 +313,7 @@ export function invoiceRecordBackend () {
   })
 
   app.post('/api/getProductNameOptions', function (req, res) {
-    MongoClient.connect('mongodb://127.0.0.1:12345', { useUnifiedTopology: true }, function (err0, client) {
+    MongoClient.connect('mongodb://127.0.0.1:27017', { useUnifiedTopology: true }, function (err0, client) {
       try {
         const { firm, productClass } = req.body
         const $match = Object.fromEntries([[firm.label, firm.value], [productClass.label, productClass.value]])
@@ -329,7 +337,7 @@ export function invoiceRecordBackend () {
   })
 
   app.post('/api/getModelOptions', function (req, res) {
-    MongoClient.connect('mongodb://127.0.0.1:12345', { useUnifiedTopology: true }, function (err0, client) {
+    MongoClient.connect('mongodb://127.0.0.1:27017', { useUnifiedTopology: true }, function (err0, client) {
       try {
         const { productName, taxIdNumber } = req.body
         const $match = Object.assign({ 進銷項: '進項' }, Object.fromEntries([[taxIdNumber.label, taxIdNumber.value], [productName.label, productName.value]]))
@@ -352,7 +360,7 @@ export function invoiceRecordBackend () {
   })
 
   app.post('/api/getUnitPriceAndProjectCodeOptions', function (req, res) {
-    MongoClient.connect('mongodb://127.0.0.1:12345', { useUnifiedTopology: true }, function (err0, client) {
+    MongoClient.connect('mongodb://127.0.0.1:27017', { useUnifiedTopology: true }, function (err0, client) {
       try {
         const { model, productName, taxIdNumber } = req.body
         const $match = Object.fromEntries([[taxIdNumber.label, taxIdNumber.value], [productName.label, productName.value], [model.label, model.value]])
@@ -380,7 +388,7 @@ export function invoiceRecordBackend () {
   })
 
   app.post('/api/submitPurchaseRecord', function (req, res) {
-    MongoClient.connect('mongodb://127.0.0.1:12345', { useUnifiedTopology: true }, function (err0, client) {
+    MongoClient.connect('mongodb://127.0.0.1:27017', { useUnifiedTopology: true }, function (err0, client) {
       try {
         const convertFormat = (name, purchaseRecord) => {
           req.body[name] = Object.values(purchaseRecord).reduce((total, elem) => {
@@ -420,7 +428,7 @@ export function invoiceRecordBackend () {
   })
 
   app.post('/api/getSerialNumberOptions', function (req, res) {
-    MongoClient.connect('mongodb://127.0.0.1:12345', { useUnifiedTopology: true }, function (err0, client) {
+    MongoClient.connect('mongodb://127.0.0.1:27017', { useUnifiedTopology: true }, function (err0, client) {
       try {
         const { serialNumberTypeIn } = req.body
         const $match = { serialNumberMatched: true, 'sheetInform.sheetName.value': '報價單' }
@@ -452,7 +460,7 @@ export function invoiceRecordBackend () {
   })
 
   app.post('/api/getDataOfQuotation', function (req, res) {
-    MongoClient.connect('mongodb://127.0.0.1:12345', { useUnifiedTopology: true }, function (err0, client) {
+    MongoClient.connect('mongodb://127.0.0.1:27017', { useUnifiedTopology: true }, function (err0, client) {
       try {
         const salesInvoiceRecords = []
         const result = {}
@@ -524,7 +532,7 @@ export function invoiceRecordBackend () {
   })
 
   app.post('/api/insertSalesInvoiceRecords', function (req, res) {
-    MongoClient.connect('mongodb://127.0.0.1:12345', { useUnifiedTopology: true }, async function (err0, client) {
+    MongoClient.connect('mongodb://127.0.0.1:27017', { useUnifiedTopology: true }, async function (err0, client) {
       try {
         const { salesInvoiceRecords, invoiceNumber } = req.body
         const $match = Object.fromEntries([[invoiceNumber.label, invoiceNumber.value]])
@@ -570,7 +578,7 @@ export function invoiceRecordBackend () {
   })
 
   app.post('/api/getRemainderOfProduct', function (req, res) {
-    MongoClient.connect('mongodb://127.0.0.1:12345', { useUnifiedTopology: true }, function (err0, client) {
+    MongoClient.connect('mongodb://127.0.0.1:27017', { useUnifiedTopology: true }, function (err0, client) {
       try {
         const { taxIdNumber, model } = req.body
         const $match = Object.fromEntries([[taxIdNumber.label, taxIdNumber.value], ['型號', model]])
@@ -595,9 +603,139 @@ export function invoiceRecordBackend () {
     })
   })
 
+  app.post('/api/exportInvoiceSheet', function (req, res) {
+    const { generalTableData } = req.body
+    const workbook = new ExcelJS.Workbook()
+    const sheetLables = ['進貨發票稅額500元以上', '進貨發票稅額500元以下', '其他費用-稅額500元以下', '交通費', '銷貨發票', '營業稅估算']
+    sheetLables.forEach(sheetLabel => workbook.addWorksheet(sheetLabel))
+    const worksheets = {
+      purchaseInvoicesAboveFiveHundredTwd: workbook.getWorksheet('進貨發票稅額500元以上'),
+      purchaseInvoicesUnderFiveHundredTwd: workbook.getWorksheet('進貨發票稅額500元以下'),
+      otherExpenses: workbook.getWorksheet('其他費用-稅額500元以下'),
+      trafficExpenses: workbook.getWorksheet('交通費'),
+      salesInvoices: workbook.getWorksheet('銷貨發票'),
+      salesTax: workbook.getWorksheet('營業稅估算')
+    }
+    const columns = [
+      { header: '業主', key: 'firm' },
+      { header: '項目', key: 'item' },
+      { header: '發票號碼', key: 'invoiceNumber' },
+      { header: '日期mmdd', key: 'date' },
+      { header: '稅別/項目', key: 'invoiceType' },
+      { header: '統編', key: 'taxIdNumbers' },
+      { header: '銷售額', key: 'salesFigures' },
+      { header: '稅額', key: 'tax' },
+      { header: '總額', key: 'summary' },
+      { header: '種類', key: 'category' },
+      { header: '備註', key: 'remark' },
+    ]
+    // create columns
+    Object.values(worksheets).forEach((worksheet, index, arr) => {
+      if (index < arr.length - 1) worksheet.columns = structuredClone(columns)
+    })
+    MongoClient.connect('mongodb://127.0.0.1:27017', { useUnifiedTopology: true }, function (err0, client) {
+      try {
+        const invoiceNumbers = generalTableData.reduce((total, tableData) => {
+          return total.includes(tableData.invoiceNumber) ? total : [...total, tableData.invoiceNumber]
+        }, [])
+        const $addFields = { matched: { $and: [{ $in: ['$發票號', invoiceNumbers] }, { $eq: ['$產品種類', '其他費用'] }] } }
+        const $group = { _id: '$產品材質', invoiceNumbers: { $addToSet: '$發票號' } }
+        client.db('ERP').collection('invoiceRecord').aggregate([{ $addFields }, { $match: { matched: true } }, { $group }]).toArray(async (err1, document) => {
+          try {
+            const findColumnIndex = (columnKey) => columns.findIndex(column => column.key === columnKey)
+            const trafficExpensesInvoiceNumbers = document.find(elem => elem._id === '交通').invoiceNumbers
+            const otherExpensesInvoiceNumbers = document.reduce((total, elem) => {
+              return elem._id === '交通' ? total : [...total, ...elem.invoiceNumbers]
+            }, [])
+            const createRowData = (tableData) => columns.reduce((total, column) => {
+              return column.key === 'item' || column.key === 'category'
+                ? total
+                : Object.assign(total, Object.fromEntries([[column.key, tableData[column.key]]]))
+            }, { item: null, category: null })
+            // add row
+            generalTableData.forEach(tableData => {
+              const { purchaseSalesItem, invoiceNumber, tax } = tableData
+              if (purchaseSalesItem === '銷項') {
+                worksheets.salesInvoices.addRow(createRowData(tableData))
+              } else if (trafficExpensesInvoiceNumbers.includes(invoiceNumber)) {
+                worksheets.trafficExpenses.addRow(createRowData(tableData))
+              } else if (otherExpensesInvoiceNumbers.includes(invoiceNumber) && tax < 500) {
+                worksheets.otherExpenses.addRow(createRowData(tableData))
+              } else if (tax < 500) {
+                worksheets.purchaseInvoicesUnderFiveHundredTwd.addRow(createRowData(tableData))
+              } else if (tax >= 500) {
+                worksheets.purchaseInvoicesAboveFiveHundredTwd.addRow(createRowData(tableData))
+              }
+            })
+            Object.values(worksheets).forEach((worksheet, index, arr) => {
+              if (index < arr.length - 1) {
+                // add total amount
+                const calculateTotalAmount = (values) => values.slice(2).reduce((total, elem) => {
+                  return total + Number(elem)
+                }, 0)
+                const total = {
+                  salesFigures: calculateTotalAmount(worksheet.getColumn('salesFigures').values),
+                  tax: calculateTotalAmount(worksheet.getColumn('tax').values),
+                  summary: calculateTotalAmount(worksheet.getColumn('summary').values)
+                }
+                worksheet.addRow({ firm: '合計', salesFigures: total.salesFigures, tax: total.tax, summary: total.summary })
+                worksheet.getColumn('salesFigures').values = worksheet.getColumn('salesFigures').values.map(value => numberWithCommas(value))
+                worksheet.getColumn('tax').values = worksheet.getColumn('tax').values.map(value => numberWithCommas(value))
+                worksheet.getColumn('summary').values = worksheet.getColumn('summary').values.map(value => numberWithCommas(value))
+                // set stylies
+                worksheet.eachRow((row, rowNumber) => {
+                  row.font = { name: '微軟正黑體', size: 12 }
+                  if (rowNumber > 1) {
+                    row.eachCell((cell, colNumber) => {
+                      const columnsAlignedRight = [findColumnIndex('item') + 1, findColumnIndex('taxIdNumbers') + 1, findColumnIndex('salesFigures') + 1, findColumnIndex('tax') + 1, findColumnIndex('summary') + 1, findColumnIndex('category') + 1]
+                      if (columnsAlignedRight.includes(colNumber)) cell.alignment = { horizontal: 'right' }
+                    })
+                  }
+                })
+                worksheet.getRow(1).eachCell((cell) => {
+                  cell.font.bold = true
+                  cell.border = { bottom: { style: 'double' } }
+                  cell.alignment = { horizontal: 'center' }
+                })
+                worksheet.lastRow.eachCell({ includeEmpty: true }, (cell, colNumber) => {
+                  if (colNumber <= columns.length) {
+                    cell.font.bold = true
+                    cell.border = { top: { style: 'double' } }
+                  }
+                })
+                worksheet.lastRow.getCell('category').border = { top: { style: 'double' } }
+                worksheet.lastRow.getCell('remark').border = { top: { style: 'double' } }
+              }
+            })
+            // export excel file
+            // workbook.xlsx.writeFile('/Users/evan/Desktop/workbook.xlsx')
+            const buffer = await workbook.xlsx.writeBuffer()
+            res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=utf-8')
+            res.send({
+              // 把buffer轉為base64格式
+              // Base64是一種用64個字符來表示任意二進制數據的方法。
+              // 用記事本打開exe、jpg、pdf這些文件時，我們都會看到一大堆亂碼，
+              // 因為二進製文件包含很多無法顯示和打印的字符，所以，如果要讓記事本這樣的文本處理軟件能處理二進制數據，
+              // 就需要一個二進製到字符串的轉換方法。Base64是一種最常見的二進制編碼方法。
+              bufferExcel: buffer.toString('base64')
+            })
+          } catch (err1) {
+            res.end()
+            client.close()
+            console.error(err1)
+          }
+        })
+      } catch (err0) {
+        res.end()
+        client.close()
+        console.error(err0)
+      }
+    })
+  })
+
   io.on('connection', (socket) => {
     socket.on('getProductClassByTaxIdNum', (frontendData) => {
-      MongoClient.connect('mongodb://127.0.0.1:12345', { useUnifiedTopology: true }, function (err0, client) {
+      MongoClient.connect('mongodb://127.0.0.1:27017', { useUnifiedTopology: true }, function (err0, client) {
         if (!err0) {
           // client.db('ERP').collection('ProductClassification').aggregate([{ $match: { 統編: frontendData.taxIdNum } }, { $project: { _id: 0, 產品種類: 1 } }]).toArray((err1, document) => {
           client.db('ERP').collection('materialsInform').aggregate([{ $match: { 統編: frontendData.taxIdNum } }, { $project: { _id: 0, 產品種類: 1 } }]).toArray((err1, document) => {
@@ -619,7 +757,7 @@ export function invoiceRecordBackend () {
       })
     })
     socket.on('getFirmNameByProductClass', (frontendData) => {
-      MongoClient.connect('mongodb://127.0.0.1:12345', { useUnifiedTopology: true }, function (err0, client) {
+      MongoClient.connect('mongodb://127.0.0.1:27017', { useUnifiedTopology: true }, function (err0, client) {
         if (!err0) {
           // client.db('ERP').collection('ProductClassification').aggregate([{ $match: { 產品種類: frontendData.productClass } }, { $project: { _id: 0, 產品名稱: 1 } }]).toArray((err1, document) => {
           client.db('ERP').collection('materialsInform').aggregate([{ $match: { 產品種類: frontendData.productClass } }, { $project: { _id: 0, 產品名稱: 1 } }]).toArray((err1, document) => {
@@ -641,7 +779,7 @@ export function invoiceRecordBackend () {
       })
     })
     socket.on('getModelAnd_idByClass', (frontendData) => {
-      MongoClient.connect('mongodb://127.0.0.1:12345', { useUnifiedTopology: true }, function (err0, client) {
+      MongoClient.connect('mongodb://127.0.0.1:27017', { useUnifiedTopology: true }, function (err0, client) {
         if (!err0) {
           client.db('ERP').collection('materialsInform').aggregate([{ $match: { 產品名稱: frontendData.class2 } }, { $project: { 型號: 1 } }]).toArray((err1, document) => {
             if (!err1) {
@@ -663,7 +801,7 @@ export function invoiceRecordBackend () {
       })
     })
     socket.on('getPricesByMaterialsInform_id', (frontendData) => {
-      MongoClient.connect('mongodb://127.0.0.1:12345', { useUnifiedTopology: true }, function (err0, client) {
+      MongoClient.connect('mongodb://127.0.0.1:27017', { useUnifiedTopology: true }, function (err0, client) {
         if (!err0) {
           const { materialsInform } = frontendData
           client.db('ERP').collection('materialsList').aggregate([{ $match: materialsInform }, { $project: { _id: 0, 單價: 1 } }]).toArray((err1, document) => {
@@ -683,7 +821,7 @@ export function invoiceRecordBackend () {
       })
     })
     socket.on('update', (frontendData) => {
-      MongoClient.connect('mongodb://127.0.0.1:12345', { useUnifiedTopology: true }, function (err0, client) {
+      MongoClient.connect('mongodb://127.0.0.1:27017', { useUnifiedTopology: true }, function (err0, client) {
         if (!err0) {
           client.db('ERP').collection('invoiceRecord').aggregate([{ $match: { _id: new mongodb.ObjectID(frontendData.selected._id) } }]).toArray((err2, document) => {
             io.emit('initializeForUpdated', {
@@ -699,7 +837,7 @@ export function invoiceRecordBackend () {
       })
     })
     socket.on('submit', (frontendData) => {
-      MongoClient.connect('mongodb://127.0.0.1:12345', { useUnifiedTopology: true }, function (err0, client) {
+      MongoClient.connect('mongodb://127.0.0.1:27017', { useUnifiedTopology: true }, function (err0, client) {
         if (!err0) {
           if (frontendData.submitOperation === 'create') {
             (async () => {
@@ -722,7 +860,7 @@ export function invoiceRecordBackend () {
       })
     })
     socket.on('delete', (frontendData) => {
-      MongoClient.connect('mongodb://127.0.0.1:12345', { useUnifiedTopology: true }, function (err0, client) {
+      MongoClient.connect('mongodb://127.0.0.1:27017', { useUnifiedTopology: true }, function (err0, client) {
         if (!err0) {
           (async () => {
             await client.db('ERP').collection('invoiceRecord').deleteOne({ _id: new mongodb.ObjectID(frontendData.selected[0]._id) })

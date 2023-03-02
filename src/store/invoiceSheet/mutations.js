@@ -42,9 +42,9 @@ const updateGeneralTableData = (state, value) => {
   state.generalTableData = value
 }
 
-const resetGeneralTableData = (state) => {
-  state.generalTableData = []
-}
+// const resetGeneralTableData = (state) => {
+//   state.generalTableData = []
+// }
 
 const deleteGeneralTableData = (state, value) => {
   const { generalTableData } = state, { generalDataItemSelected } = value
@@ -93,7 +93,7 @@ export {
   updatePurchaseSalesItemSelected,
   updateSearchItemSelected,
   updateGeneralTableData,
-  resetGeneralTableData,
+  // resetGeneralTableData,
   deleteGeneralTableData,
   updateGeneralDataItemSelected,
   resetGeneralDataItemSelected,

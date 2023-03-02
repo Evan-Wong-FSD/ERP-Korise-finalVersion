@@ -11,7 +11,7 @@
 
 <script>
 import { mapState, mapMutations } from 'vuex'
-import { ProductClassificationAPI2 } from 'boot/axios'
+import { ProductClassificationAPI } from 'boot/axios'
 import { DialogProps } from 'src/method/DialogProps.js'
 import { initDialogPrototype } from 'src/mixins/initDialogPrototype.js'
 import BtnDialog from 'src/components/BtnDialog.vue'
@@ -115,7 +115,7 @@ export default {
     },
     onUpdate () {
       const { tableDataSelected, controlInputs } = this, { id } = tableDataSelected[0]
-      ProductClassificationAPI2.post('/api/updateProductClass', { id, controlInputs }).then(() => {
+      ProductClassificationAPI.post('/api/updateProductClass', { id, controlInputs }).then(() => {
         const dialogPrototype = Object.getPrototypeOf(this.dialogProps)
         this.updateTableDataValue({ id, controlInputs })
         dialogPrototype.dialogRef.hide()
