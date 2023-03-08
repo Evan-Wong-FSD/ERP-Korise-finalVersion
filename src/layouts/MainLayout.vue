@@ -51,7 +51,7 @@ export default {
       menuButton: {
         進銷庫存記錄: false,
         進銷項表單: false,
-        物料清單2: false,
+        物料清單: false,
         BOM表: false,
         材料資料: false,
         產品種類: false,
