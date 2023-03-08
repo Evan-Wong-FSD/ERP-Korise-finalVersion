@@ -39,14 +39,14 @@ export default {
     ...mapMutations('invoiceSheet', {
       resetCustomDate: 'resetCustomDate',
       resetAccountingPeriod: 'resetAccountingPeriod',
-      resetGeneralTableData: 'resetGeneralTableData',
+      // resetGeneralTableData: 'resetGeneralTableData',
       resetGeneralDataItemSelected: 'resetGeneralDataItemSelected'
     })
   },
   beforeDestroy () {
     this.resetCustomDate()
     this.resetAccountingPeriod()
-    this.resetGeneralTableData()
+    // this.resetGeneralTableData()
     this.resetGeneralDataItemSelected()
     this.$root.$off('resetCustomDate')
     this.$root.$off('resetAccountingPeriod')

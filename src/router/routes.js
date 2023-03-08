@@ -24,11 +24,6 @@ const routes = [
         component: () => import('pages/invoiceSheet/Index.vue')
       },
       {
-        path: '/物料清單',
-        name: '物料清單',
-        component: () => import('pages/materialsList/materialsList.vue')
-      },
-      {
         path: '/物料清單2',
         name: '物料清單2',
         component: () => import('pages/materialsList2/Index.vue')

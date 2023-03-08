@@ -25,7 +25,8 @@ const materialsLists = []
 function createMaterialsList () {
   const worksheet = workbook.getWorksheet('completedMaterialsListIn2022')
   const columnsRequired = [
-    '統編', '公司名稱', '產品名稱', '型號', '日期', '進銷項', '單價', '數量', '折扣', '付款條件', '稅金', 'Project code', '備註', '複價'
+    // '統編', '公司名稱', '產品名稱', '產品種類', '產品材質', '管材口徑', '型號', '日期', '進銷項', '單價', '數量', '折扣', '付款條件', '稅金', 'Project code', '備註', '複價'
+    '統編', '公司名稱', '產品種類', '產品材質', '管材口徑', '型號', '日期', '進銷項', '單價', '數量', '折扣', '付款條件', '稅金', 'Project code', '備註', '複價'
   ]
   const columns = worksheet.getRow(1).values.filter(elem => elem && columnsRequired.includes(elem))
   const colNumberRequiredInWorksheet = columnsRequired.reduce((total, elem) => {

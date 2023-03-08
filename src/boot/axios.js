@@ -8,7 +8,6 @@ Vue.prototype.$axios = axios
 const firmInformAPI = axios.create({ baseURL: 'http://localhost:3001/' })
 const ProductClassificationAPI = axios.create({ baseURL: 'http://localhost:3008/' })
 const materialsInformtAPI = axios.create({ baseURL: 'http://localhost:3003/' })
-const materialsListAPI = axios.create({ baseURL: 'http://localhost:3004/' })
 const materialsListAPI2 = axios.create({ baseURL: 'http://localhost:3009/' })
 const invoiceSheetAPI = axios.create({ baseURL: 'http://localhost:3005/' })
 const bomSheet = axios.create({ baseURL: 'http://localhost:3006/' })
@@ -21,7 +20,6 @@ const login = axios.create({ baseURL: 'http://localhost:3007/' })
 export {
   axios,
   materialsInformtAPI,
-  materialsListAPI,
   invoiceSheetAPI,
   firmInformAPI,
   bomSheet,

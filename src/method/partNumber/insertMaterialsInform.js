@@ -14,7 +14,7 @@ const materialsInforms = []
   // console.log(materialsInforms)
   MongoClient.connect('mongodb://127.0.0.1:27017', { useUnifiedTopology: true }, async function (err0, client) {
     try {
-      // await client.db('ERP').collection('materialsInform').deleteMany({})
+      await client.db('ERP').collection('materialsInform').deleteMany({})
       await client.db('ERP').collection('materialsInform').insertMany(materialsInforms)
       client.close()
     } catch (err0) {
@@ -41,7 +41,7 @@ const materialsInforms = []
 // }
 
 function createProductClassification () {
-  const worksheet = workbook.getWorksheet('confirmToInsert')
+  const worksheet = workbook.getWorksheet('completedMaterialsInformIn2022')
   const columnsRequired = [
     '統編', '公司名稱', '產品種類', '產品種類流水號', '產品材質', '產品材質流水號', '產品名稱', '產品名稱流水號', '管材口徑', '管材口徑流水號', '管材名稱', '管材名稱流水號', '產品料號', '型號', '描述', '規格', '特性'
   ]

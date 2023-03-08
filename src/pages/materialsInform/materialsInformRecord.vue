@@ -1,29 +1,22 @@
 <template>
   <div id="container" class="my-font-medium bg-grey-1">
-    <!-- <materialsInformRecordHeader @select="switchOption" /> -->
     <materialsInformRecordHeader />
     <br>
-    <!-- <materialsInformRecordBody v-if="select === '記錄'" /> -->
-    <materialsInformRecordBody2 v-if="menuSelected === '記錄'" />
-    <!-- <materialsInformSheet v-if="select === '表單'" /> -->
-    <materialsInformSheet2 v-if="menuSelected === '表單'" />
+    <materialsInformRecordBody v-if="menuSelected === '記錄'" />
+    <materialsInformSheet v-if="menuSelected === '表單'" />
   </div>
 </template>
 
 <script>
 import { mapState } from 'vuex'
 import materialsInformRecordHeader from './materialsInformRecordHeader.vue'
-// import materialsInformRecordBody from './materialsInformRecordBody.vue'
-import materialsInformRecordBody2 from './materialsInformRecordBody2.vue'
-// import materialsInformSheet from './materialsInformSheet.vue'
-import materialsInformSheet2 from './materialsInformSheet2.vue'
+import materialsInformRecordBody from './materialsInformRecordBody.vue'
+import materialsInformSheet from './materialsInformSheet.vue'
 export default {
   components: {
     materialsInformRecordHeader,
-    // materialsInformRecordBody,
-    materialsInformRecordBody2,
-    // materialsInformSheet
-    materialsInformSheet2
+    materialsInformRecordBody,
+    materialsInformSheet
   },
   computed: {
     ...mapState('materialsInform', ['menuSelected'])

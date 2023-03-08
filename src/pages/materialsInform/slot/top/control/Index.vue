@@ -1,6 +1,6 @@
 <template>
   <section class="row q-gutter-x-md">
-    <q-btn color="white" text-color="black" label="下載" />
+    <!-- <q-btn color="white" text-color="black" label="下載" /> -->
     <q-btn color="white" text-color="black" label="更新" @click="shouldResetSearch ? openResetSearchDialog(onUpdate) : onUpdate()" />
     <q-btn color="warning" text-color="grey-1" label="重設" @click="onReset" />
     <q-btn color="negative" text-color="grey-1" label="刪除" @click="shouldResetSearch ? openResetSearchDialog(openDeleteDialog) : openDeleteDialog()" />
@@ -37,7 +37,7 @@ import { mapState, mapMutations } from 'vuex'
 import { DialogProps } from 'src/method/DialogProps.js'
 import { initDialogPrototype } from 'src/mixins/initDialogPrototype.js'
 import BtnDialog from 'src/components/BtnDialog.vue'
-import materialsInformRecordBody from 'src/pages/materialsInform/materialsInformRecordBody2.vue'
+import materialsInformRecordBody from 'src/pages/materialsInform/materialsInformRecordBody.vue'
 export default {
   components: {
     BtnDialog,

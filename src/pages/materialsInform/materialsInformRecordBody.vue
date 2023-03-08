@@ -2,123 +2,63 @@
   <section class="Wrap bg-grey-1">
     <q-form ref="form" @reset="onReset" @submit="onSubmit">
       <div class="row justify-between q-gutter-y-md">
-        <div v-for="(elem, name) of inputBox" :key="name" class="inputBox">
+        <div
+          v-for="(elem, index) of inputBox.filter(elem => !hiddenMaterialNames.includes(elem.name))"
+          :key="index"
+          class="inputBox"
+        >
           <q-select
             outlined
-            v-model="elem.value"
-            :options="elem.options"
-            :label="elem.label"
-            v-if="name === 'material'"
-            :rules="[ val => val && val.length > 0 || `'${elem.label}'不能為空值`]"
-          />
-
-          <q-select
-            outlined
-            use-input
+            clearable
             input-debounce="1000"
+            :use-input="elem.name !== 'productName'"
             v-model="elem.value"
+            :ref="elem.name"
+            :disable="isDisable(elem)"
             :options="elem.options"
             :label="elem.label"
-            v-else-if="name === 'taxIdNumber' || name === 'firm'"
-            @filter="(value, update, abort) => { fetchAndFilterOptions( elem.label, value.trim(), update, abort) }"
-            @input="(value) => { firmInformInput(name, elem.label, value) }"
-            :rules="[ val => val && val.length > 0 || `'${elem.label}'不能為空值`]"
+            @filter="(typeIn, update, abort) => { onFilter(elem, typeIn.trim(), update, abort) }"
+            @input="(value) => { onInput(elem, value) }"
+            @clear="() => { onClear(elem) }"
+            v-if="'options' in elem"
+            :rules="[val => val && val.length > 0 || `'${elem.label}'不能為空值`]"
           >
             <template v-slot:no-option>
-              <q-item>
-                <q-item-section class="text-grey">
-                  無結果
-                </q-item-section>
+              <ProductNameSerialNumber
+                v-if="elem.name === 'productName'"
+                :inputBox="inputBox"
+                @updateProductName="updateProductName"
+                @hidePopup="$refs.productName[0].hidePopup()"
+              />
+
+              <q-item v-else>
+                <q-item-section class="text-grey" v-html="'無結果'" />
               </q-item>
             </template>
-          </q-select>
 
-          <q-select
-            outlined
-            v-model="elem.value"
-            :options="elem.options"
-            :label="elem.label"
-            v-else-if="name === 'materialClass' || name === 'materialSubclass'"
-            :rules="[ val => val && val.length > 0 || `'${elem.label}'不能為空值`]"
-          />
-
-          <q-select
-            outlined
-            :use-input="inputBox.materialClass.value !== '管材'"
-            v-model="elem.value"
-            :options="elem.options"
-            :label="elem.label"
-            v-else-if="name === 'partNumber'"
-            :rules="[ val => val && val.length > 0 || `'${elem.label}'不能為空值`]"
-          >
-            <template v-slot:no-option>
-              <q-item v-if="inputBox.materialClass.value === '其他'">
-                <q-item-section class="text-grey">
-                  無結果
-                </q-item-section>
-              </q-item>
-
-              <q-item class="bg-grey-1"  v-else-if="inputBox.materialClass.value === '管材'">
-                <q-item-section>
-                  <section class="row justify-end q-gutter-x-sm">
-                    <q-btn
-                      dense
-                      :label="elem.label"
-                      class="text-bold"
-                      @click="togglePartNumberTooltips(index)"
-                      :color="elem.name === 'delete' ? 'negative' : 'grey-3'"
-                      :text-color="elem.name === 'delete' ? 'grey-1' : 'black'"
-                      v-for="(elem, index) in partNumberTooltips"
-                      :key="index"
-                    >
-                      <section v-show="partNumberTooltips[index].visibility" class="partNumberTooltipPointedTop ">
-                        <q-menu persistent :value="partNumberTooltips[index].visibility" content-class="bg-cyan-3" anchor="bottom middle" self="top middle">
-                          <q-item>
-                            <q-item-section>
-                              <section class="row q-gutter-x-sm">
-                                <q-btn dense color="grey-3" text-color="black" label="確認" class="text-bold" @click="partNumberTooltips[index].visibility = false" />
-                                <q-btn dense color="warning" text-color="grey-1" label="取消" class="text-bold" @click="partNumberTooltips[index].visibility = false" />
-                              </section>
-                            </q-item-section>
-                          </q-item>
-                        </q-menu>
-                      </section>
-                    </q-btn>
-                  </section>
-
-                  <br />
-
-                  <section class="row justify-between">
-                    <q-select dense outlined label="口徑" class="input-tubeBore" />
-                    <q-select dense outlined label="物料名稱" class="input-materialName" />
-                  </section>
-                </q-item-section>
-              </q-item>
+            <template v-slot:selected-item="scope">
+              {{
+                (elem.name === 'productClass' || elem.name === 'productSubclass' || elem.name === 'productName') && scope.opt
+                  ? `${scope.opt} (流水號：${retrieveSerialNumber(elem.name)})`
+                  : scope.opt
+              }}
             </template>
           </q-select>
-
-          <q-input
-            outlined
-            v-model="elem.value"
-            :label="elem.label"
-            v-else-if="name === 'model' || name === 'description' || name === 'specification' || name === 'characteristic'"
-            :rules="[ val => val && val.length > 0 || `'${elem.label}'不能為空值`]"
-          />
 
           <q-input
             outlined
             v-model="elem.value"
             :label="elem.label"
             v-else
-            :rules="[val => []]"
+            :rules="[val => inputRules(elem, val)]"
           />
         </div>
       </div>
 
       <br>
 
-      <div class="row justify-end q-gutter-x-lg text-grey-10 bottle-btn-position no-margin">
-        <div class="column items-center">
+      <div class="row justify-end q-gutter-x-lg text-grey-10 no-margin">
+        <div v-show="menuSelected === '記錄'" class="column items-center">
           <q-btn
             size="lg"
             color="white"
@@ -140,11 +80,11 @@
           </q-chip>
         </div>
 
+        <!-- :url="uploadUrl" -->
         <q-uploader
           ref="uploader"
           accept=".pdf"
           v-show="false"
-          :url="uploadUrl"
           :multiple="false"
           @added ="addUploadFile"
           @uploaded="uploadFinished('positive', '上傳完成')"
@@ -176,102 +116,152 @@
 <script>
 import { mapState, mapMutations } from 'vuex'
 import { materialsInformtAPI } from 'boot/axios'
+import ProductNameSerialNumber from 'src/pages/materialsInform/slot/productNameSerialNumber/Index.vue'
 export default {
+  components: {
+    ProductNameSerialNumber
+  },
   data () {
     return {
-      inputBox: {},
-      uploadedFileChip: false,
-      partNumberTooltips: [
-        {
-          name: 'create',
-          label: '新增',
-          visibility: false
-        },
-        {
-          name: 'update',
-          label: '更新',
-          visibility: false
-        },
-        {
-          name: 'delete',
-          label: '刪除',
-          visibility: false
-        }
-      ]
+      inputBox: null,
+      hiddenMaterialNames: [
+        'productClassSerialNumber',
+        'productSubclassSerialNumber',
+        'productNameSerialNumber',
+        'caliber',
+        'caliberSerialNumber',
+        'pipeMaterialName',
+        'pipeMaterialNameSerialNumber',
+        'productPartNumber'
+      ],
+      uploadedFileChip: false
     }
   },
   computed: {
-    ...mapState('materialsInform', ['materialsInform', 'selectedId']),
-    uploadUrl () {
-      return `http://192.168.0.189:3003/api/upload?partNumber=${this.inputBox.partNumber.value}`
+    ...mapState('materialsInform', ['menuSelected', 'materialsInform', 'tableDataSelected']),
+    productClass () {
+      return this.inputBox.find(elem => elem.name === 'productClass')
+    },
+    productNameSerialNumber () {
+      const findMaterialsInform = (name) => this.materialsInform.find(elem => elem.name === name)
+      return this.productClass.value === '管材'
+        ? findMaterialsInform('caliberSerialNumber').value + findMaterialsInform('pipeMaterialNameSerialNumber').value
+        : findMaterialsInform('productNameSerialNumber').value
+    },
+    productPartNumber () {
+      const productClassSerialNumber = this.materialsInform.find(elem => elem.name === 'productClassSerialNumber').value
+      const productSubclassSerialNumber = this.materialsInform.find(elem => elem.name === 'productSubclassSerialNumber').value
+      return productClassSerialNumber + productSubclassSerialNumber + this.productNameSerialNumber
     }
+    // uploadUrl () {
+    //   return `http://192.168.0.189:3003/api/upload?partNumber=${this.inputBox.partNumber.value}`
+    // }
   },
   beforeMount () {
-    this.initInputBox()
+    this.inputBox = JSON.parse(JSON.stringify(this.materialsInform))
   },
   methods: {
     ...mapMutations('materialsInform', {
+      updateProductPartNumber: 'updateProductPartNumber',
+      resetPipeMaterial: 'resetPipeMaterial',
+      resetProductNameSerialNumber: 'resetProductNameSerialNumber',
+      resetProductPartNumber: 'resetProductPartNumber',
+      updateProductClassSerialNumber: 'updateProductClassSerialNumber',
+      resetProductClassSerialNumber: 'resetProductClassSerialNumber',
+      updateProductSubclassSerialNumber: 'updateProductSubclassSerialNumber',
+      resetProductSubclassSerialNumber: 'resetProductSubclassSerialNumber',
       resetMaterialsInform: 'resetMaterialsInform'
     }),
-    initInputBox () {
-      this.inputBox = JSON.parse(JSON.stringify(this.materialsInform))
+    isDisable (elem) {
+      const find = (name) => this.inputBox.find(elem => elem.name === name)
+      if (elem.name === 'productClass') return !(find('taxIdNumber').value && find('firm').value)
+      if (elem.name === 'productSubclass') return !find('productClass').value
+      if (elem.name === 'productName') return !find('productSubclass').value
     },
-    fetchAndFilterOptions (label, typeIn, update, abort) {
-      if (typeIn.length < 3) {
-        abort()
-        return
-      }
-      materialsInformtAPI.post('/api/getFirmInformOptions', { label, typeIn }).then(res => {
+    onFilter (elem, typeIn, update, abort) {
+      if (elem.name === 'productName') return update()
+      if (typeIn.length < 2) return abort()
+      this.requestOptions(elem, typeIn, update)
+    },
+    requestOptions (target, typeIn, update) {
+      const { name, label, options } = target
+      const hasValueSelects = this.inputBox.filter(elem => 'options' in elem && elem.name !== target.name && elem.value)
+      materialsInformtAPI.get('/api/filterOptions', { params: { name, label, typeIn, hasValueSelects: JSON.stringify(hasValueSelects) } }).then(res => {
         update(() => {
-          const { taxIdNumber, firm } = this.inputBox
-          const { taxIdNumberOptions, firmOptions } = res.data
-          taxIdNumber.options = taxIdNumberOptions
-          firm.options = firmOptions
+          options.splice(0, options.length, ...res.data.options)
         })
       })
     },
-    firmInformInput (name, label, input) {
-      const { taxIdNumber, firm, material } = this.inputBox
-      const selectedIndexInOptions = this.inputBox[name].options.indexOf(input)
-      name = name === 'taxIdNumber' ? 'firm' : 'taxIdNumber'
-      label = label === '統編' ? '公司名稱' : '統編'
-      this.inputBox[name].value = this.inputBox[name].options[selectedIndexInOptions]
-      materialsInformtAPI.post('/api/getMaterialOptions', { taxIdNumber, firm }).then(res => {
-        material.options = res.data.materialOptions
+    onInput (select, value) {
+      if (!value) return
+      select.options.splice(0, select.options.length)
+      if (select.name === 'taxIdNumber' || select.name === 'firm') {
+        const indexShouldRequest = this.inputBox.findIndex(elem => (elem.name === 'taxIdNumber' || elem.name === 'firm') && !elem.value)
+        if (indexShouldRequest > -1) {
+          materialsInformtAPI.get('/api/requestCorrelativeFirmInformValue', { params: { select: JSON.stringify(select) } }).then(res => {
+            const selectShouldUpdateValue = this.inputBox[indexShouldRequest], { label } = selectShouldUpdateValue
+            selectShouldUpdateValue.value = res.data.firmInform[label]
+          })
+        }
+      } else if (select.name === 'productClass' || select.name === 'productSubclass') {
+        const { label, serialNumber } = select.value
+        if (select.name === 'productClass') this.updateProductClassSerialNumber({ serialNumber })
+        if (select.name === 'productSubclass') this.updateProductSubclassSerialNumber({ serialNumber })
+        select.value = label
+      }
+    },
+    inputRules (elem, value) {
+      const arrInputFree = ['voltage', 'current', 'frequency', 'powerOutput']
+      if (arrInputFree.includes(elem.name)) return []
+      return (value && value.length > 0) || `'${elem.label}'不能為空值`
+    },
+    retrieveSerialNumber (name) {
+      if (name === 'productClass') return this.materialsInform.find(elem => elem.name === 'productClassSerialNumber').value
+      if (name === 'productSubclass') return this.materialsInform.find(elem => elem.name === 'productSubclassSerialNumber').value
+      if (name === 'productName') return this.materialsInform.find(elem => elem.name === 'productNameSerialNumber').value
+    },
+    updateProductName (value) {
+      const { selects } = value
+      const productName = this.inputBox.find(elem => elem.name === 'productName')
+      productName.value = selects.reduce((total, elem) => {
+        return total + elem.value
+      }, '')
+      this.updateProductPartNumber({ partNumber: this.productPartNumber })
+    },
+    onClear (select) {
+      const clearItems = [
+        { name: 'taxIdNumber', clear: this.resetFirm },
+        { name: 'firm', clear: this.resetFirm },
+        { name: 'productClass', clear: this.resetProductClass },
+        { name: 'productSubclass', clear: this.resetProductSubclass },
+        { name: 'productName', clear: this.resetProductName }
+      ]
+      const startClearIndex = clearItems.findIndex(elem => elem.name === select.name)
+      const clearScope = clearItems.slice(startClearIndex)
+      clearScope.forEach(elem => {
+        elem.clear()
       })
     },
-    onReset () {
-      for (const name in this.inputBox) {
-        this.inputBox[name].value = ''
-        if ('options' in this.inputBox[name]) {
-          const { options } = this.inputBox[name]
-          options.splice(0, options.length)
-        }
-      }
-      this.removeUploadFile()
+    resetFirm () {
+      const taxIdNumber = this.inputBox.find(elem => elem.name === 'taxIdNumber')
+      const firm = this.inputBox.find(elem => elem.name === 'firm')
+      if (taxIdNumber.value) taxIdNumber.value = ''
+      if (firm.value) firm.value = ''
     },
-    onSubmit () {
-      if (this.selectedId) {
-        materialsInformtAPI.post('/api/updateMaterialsInform', { _id: this.selectedId, materialsInformInput: this.inputBox }).then(() => {
-          this.resetMaterialsInform()
-          this.$emit('updated')
-        })
-      } else {
-        if (this.$refs.uploader.files.length === 1) {
-          materialsInformtAPI.post('/api/saveMaterialsInform', { materialsInformInput: this.inputBox }).then(res => {
-            this.$refs.uploader.upload()
-            this.$q.notify({
-              type: res.data.success ? 'positive' : 'negative',
-              message: res.data.message
-            })
-          })
-        } else {
-          this.$q.notify({
-            type: 'warning',
-            message: '請先上傳檔案'
-          })
-        }
-      }
+    resetProductClass () {
+      const productClass = this.inputBox.find(elem => elem.name === 'productClass')
+      productClass.value = ''
+      this.resetProductClassSerialNumber()
+    },
+    resetProductSubclass () {
+      const productSubclass = this.inputBox.find(elem => elem.name === 'productSubclass')
+      productSubclass.value = ''
+      this.resetProductSubclassSerialNumber()
+    },
+    resetProductName () {
+      const productName = this.inputBox.find(elem => elem.name === 'productName')
+      productName.value = ''
+      this.$root.$emit('clearProductNameSerialNumber')
     },
     emitUploader () {
       this.$refs.form.validate().then(success => {
@@ -287,12 +277,6 @@ export default {
         }
       })
     },
-    uploadFinished (type, message) {
-      if (type === 'positive') {
-        this.$refs.form.reset()
-      }
-      this.$q.notify({ type, message })
-    },
     removeUploadFile () {
       this.uploadedFileChip = false
       this.$refs.uploader.reset()
@@ -300,10 +284,77 @@ export default {
     addUploadFile () {
       this.uploadedFileChip = true
     },
-    togglePartNumberTooltips (targetIndex) {
-      this.partNumberTooltips.forEach((elem, index) => {
-        elem.visibility = index === targetIndex ? !elem.visibility : false
+    uploadFinished (type, message) {
+      if (type === 'positive') {
+        this.$refs.form.reset()
+      }
+      this.$q.notify({ type, message })
+    },
+    onReset () {
+      // for (const name in this.inputBox) {
+      //   this.inputBox[name].value = ''
+      //   if ('options' in this.inputBox[name]) {
+      //     const { options } = this.inputBox[name]
+      //     options.splice(0, options.length)
+      //   }
+      // }
+      // this.removeUploadFile()
+      this.inputBox.forEach(elem => {
+        elem.value = ''
+        if ('options' in elem) elem.options.splice(0, elem.options.length)
+        this.resetPipeMaterial()
+        this.resetProductNameSerialNumber()
+        this.resetProductPartNumber()
       })
+    },
+    onSubmit () {
+      // if (this.selectedId) {
+      //   materialsInformtAPI.post('/api/updateMaterialsInform', { _id: this.selectedId, materialsInformInput: this.inputBox }).then(() => {
+      //     this.resetMaterialsInform()
+      //     this.$emit('updated')
+      //   })
+      // }
+      // else {
+      // if (this.$refs.uploader.files.length === 1) {
+      //   materialsInformtAPI.post('/api/saveMaterialsInform', { materialsInformInput: this.inputBox }).then(res => {
+      //     this.$refs.uploader.upload()
+      //     this.$q.notify({
+      //       type: res.data.success ? 'positive' : 'negative',
+      //       message: res.data.message
+      //     })
+      //   })
+      // } else {
+      //   this.$q.notify({
+      //     type: 'warning',
+      //     message: '請先上傳檔案'
+      //   })
+      // }
+      // }
+      const hiddenMaterialsInform = this.materialsInform.filter(elem => this.hiddenMaterialNames.includes(elem.name))
+      const hiddenInputs = this.inputBox.filter(elem => this.hiddenMaterialNames.includes(elem.name))
+      JSON.parse(JSON.stringify(hiddenMaterialsInform)).forEach(elem => {
+        const hiddenInput = hiddenInputs.find(input => input.name === elem.name)
+        Object.assign(hiddenInput, elem)
+      })
+      if (this.menuSelected === '記錄') {
+        materialsInformtAPI.post('/api/insertMaterialsInform', { materialsInform: this.inputBox }).then(res => {
+          const { type, message } = res.data
+          this.$q.notify({ type, message })
+          if (type === 'positive') this.$refs.form.reset()
+        })
+      } else if (this.menuSelected === '表單') {
+        new Promise(resolve => {
+          this.$emit('openUpdateDialog', resolve)
+        }).then(() => {
+          const { _id } = this.tableDataSelected[0]
+          materialsInformtAPI.post('/api/updateMaterialsInform', { _id, materialsInform: this.inputBox }).then(res => {
+            const { type, message } = res.data
+            this.$q.notify({ type, message })
+            this.$emit('onRequestTableData')
+            this.$emit('closeMaterialsInformRecordBodyDialog')
+          })
+        })
+      }
     }
   }
 }
@@ -322,24 +373,5 @@ export default {
   .uploadedFileChip {
     bottom: 0;
     transform: translateY(130%);
-  }
-
-  .input-tubeBore {
-    width: 48%;
-  }
-  .input-materialName {
-    width: 48%;
-  }
-
-  .partNumberTooltipPointedTop {
-    position: absolute;
-    top: 50%;
-  }
-  .partNumberTooltipPointedTop::after {
-    content: "";
-    top: 100%;
-    border-width: 5px;
-    border-style: solid;
-    border-color: transparent transparent #80deea transparent;
   }
 </style>

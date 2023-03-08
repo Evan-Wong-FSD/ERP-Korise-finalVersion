@@ -1,139 +1,124 @@
 <template>
-  <div class="q-pa-md">
+  <div class="q-pl-md">
     <q-table
-      title="Treats"
+      flat
+      ref="table"
       :data="data"
       :columns="columns"
-      row-key="name"
-    />
+      row-key="id"
+      selection="single"
+      :selected.sync="selected"
+      :visible-columns="visibleColumns"
+      style="height: 50vh;"
+      @update:selected="(selected) => { onSelect(selected) }"
+    >
+      <template v-slot:top>
+        <section class="Wrap-top">
+          <header><strong class="tableTitle">{{ tableTitle }}</strong></header>
+          <section class="row justify-between q-gutter-x-md no-wrap">
+            <section class="row no-wrap q-gutter-x-md Wrap-search">
+              <TradeSelect @initTableData="initTableData" @filterData="filterData" />
+              <ColumnSelect />
+              <TypeIn @initTableData="initTableData" @filterData="filterData" />
+            </section>
+
+            <Buttons @updateMaterialListSelected="updateSelected" @initTableData="initTableData" />
+          </section>
+        </section>
+      </template>
+    </q-table>
   </div>
 </template>
 
 <script>
+import { mapState, mapMutations } from 'vuex'
+import TradeSelect from 'src/pages/materialsList2/splitter/slot/table/slot/search/TradeSelect.vue'
+import ColumnSelect from 'src/pages/materialsList2/splitter/slot/table/slot/search/ColumnSelect.vue'
+import TypeIn from 'src/pages/materialsList2/splitter/slot/table/slot/search/TypeIn.vue'
+import Buttons from 'src/pages/materialsList2/splitter/slot/table/slot/button/Buttons.vue'
 export default {
+  components: {
+    TradeSelect,
+    ColumnSelect,
+    TypeIn,
+    Buttons
+  },
   data () {
     return {
-      columns: [
-        {
-          name: 'name',
-          required: true,
-          label: 'Dessert (100g serving)',
-          align: 'left',
-          field: row => row.name,
-          format: val => `${val}`,
-          sortable: true
-        },
-        { name: 'calories', align: 'center', label: 'Calories', field: 'calories', sortable: true },
-        { name: 'fat', label: 'Fat (g)', field: 'fat', sortable: true },
-        { name: 'carbs', label: 'Carbs (g)', field: 'carbs' },
-        { name: 'protein', label: 'Protein (g)', field: 'protein' },
-        { name: 'sodium', label: 'Sodium (mg)', field: 'sodium' },
-        { name: 'calcium', label: 'Calcium (%)', field: 'calcium', sortable: true, sort: (a, b) => parseInt(a, 10) - parseInt(b, 10) },
-        { name: 'iron', label: 'Iron (%)', field: 'iron', sortable: true, sort: (a, b) => parseInt(a, 10) - parseInt(b, 10) }
-      ],
-      data: [
-        {
-          name: 'Frozen Yogurt',
-          calories: 159,
-          fat: 6.0,
-          carbs: 24,
-          protein: 4.0,
-          sodium: 87,
-          calcium: '14%',
-          iron: '1%'
-        },
-        {
-          name: 'Ice cream sandwich',
-          calories: 237,
-          fat: 9.0,
-          carbs: 37,
-          protein: 4.3,
-          sodium: 129,
-          calcium: '8%',
-          iron: '1%'
-        },
-        {
-          name: 'Eclair',
-          calories: 262,
-          fat: 16.0,
-          carbs: 23,
-          protein: 6.0,
-          sodium: 337,
-          calcium: '6%',
-          iron: '7%'
-        },
-        {
-          name: 'Cupcake',
-          calories: 305,
-          fat: 3.7,
-          carbs: 67,
-          protein: 4.3,
-          sodium: 413,
-          calcium: '3%',
-          iron: '8%'
-        },
-        {
-          name: 'Gingerbread',
-          calories: 356,
-          fat: 16.0,
-          carbs: 49,
-          protein: 3.9,
-          sodium: 327,
-          calcium: '7%',
-          iron: '16%'
-        },
-        {
-          name: 'Jelly bean',
-          calories: 375,
-          fat: 0.0,
-          carbs: 94,
-          protein: 0.0,
-          sodium: 50,
-          calcium: '0%',
-          iron: '0%'
-        },
-        {
-          name: 'Lollipop',
-          calories: 392,
-          fat: 0.2,
-          carbs: 98,
-          protein: 0,
-          sodium: 38,
-          calcium: '0%',
-          iron: '2%'
-        },
-        {
-          name: 'Honeycomb',
-          calories: 408,
-          fat: 3.2,
-          carbs: 87,
-          protein: 6.5,
-          sodium: 562,
-          calcium: '0%',
-          iron: '45%'
-        },
-        {
-          name: 'Donut',
-          calories: 452,
-          fat: 25.0,
-          carbs: 51,
-          protein: 4.9,
-          sodium: 326,
-          calcium: '2%',
-          iron: '22%'
-        },
-        {
-          name: 'KitKat',
-          calories: 518,
-          fat: 26.0,
-          carbs: 65,
-          protein: 7,
-          sodium: 54,
-          calcium: '12%',
-          iron: '6%'
-        }
-      ]
+      selected: [],
+      data: []
+    }
+  },
+  computed: {
+    ...mapState('materialsList', ['columns', 'materialsListData', 'tableTitle', 'materialModelSelected']),
+    visibleColumns () {
+      return this.columns.reduce((total, column) => {
+        return column.name === 'id' ? total : [...total, column.name]
+      }, [])
+    }
+    // data () {
+    //   return this.materialsListData.map(field => {
+    //     return this.columns.reduce((total, column) => {
+    //       return Object.assign(total, Object.fromEntries([[column.name, field[column.label]]]))
+    //     }, {})
+    //   })
+    // }
+  },
+  mounted () {
+    this.initTableData()
+    this.sortDate()
+  },
+  methods: {
+    ...mapMutations('materialsList', {
+      updateMaterialListSelected: 'updateMaterialListSelected'
+    }),
+    initTableData () {
+      this.data.splice(0, this.data.length, ...this.materialsListData.map(field => {
+        return this.columns.reduce((total, column) => {
+          return Object.assign(total, Object.fromEntries([[column.name, field[column.label]]]))
+        }, {})
+      }))
+    },
+    sortDate () {
+      this.$refs.table.sort('date')
+    },
+    onSelect (selected) {
+      this.updateMaterialListSelected(selected)
+    },
+    updateSelected (newSelected) {
+      this.selected.splice(0, this.selected.length, newSelected)
+    },
+    filterData (dataFiltered) {
+      const convertToTableData = (dataFiltered) => dataFiltered.map(data => {
+        return this.columns.reduce((total, column) => {
+          return Object.assign(total, Object.fromEntries([[column.name, data[column.label]]]))
+        }, {})
+      })
+      this.data.splice(0, this.data.length, ...convertToTableData(dataFiltered))
+    }
+  },
+  watch: {
+    materialModelSelected () {
+      this.initTableData()
     }
   }
 }
 </script>
+
+<style lang="scss">
+  .q-table__top {
+    background-color: #bdbdbd;
+  }
+
+  .Wrap-top {
+    width: 100%;
+  }
+
+  .tableTitle {
+    font-size: 1rem;
+  }
+
+  .Wrap-search {
+    width: 60%;
+  }
+</style>

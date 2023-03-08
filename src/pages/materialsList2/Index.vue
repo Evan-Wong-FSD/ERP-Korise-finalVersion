@@ -24,6 +24,9 @@ export default {
   components: {
     Search,
     Splitter
+  },
+  beforeDestroy () {
+    this.$root.$off('growTrees')
   }
 }
 </script>
