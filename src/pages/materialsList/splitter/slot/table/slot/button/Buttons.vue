@@ -31,7 +31,7 @@ import { DialogProps } from 'src/method/DialogProps.js'
 import { initDialogPrototype } from 'src/mixins/initDialogPrototype.js'
 import { materialsListAPI2 } from 'boot/axios'
 import BtnDialog from 'src/components/BtnDialog.vue'
-import TableDialog from 'src/pages/materialsList2/splitter/slot/table/slot/button/TableDialog.vue'
+import TableDialog from 'src/pages/materialsList/splitter/slot/table/slot/button/TableDialog.vue'
 export default {
   components: {
     BtnDialog,

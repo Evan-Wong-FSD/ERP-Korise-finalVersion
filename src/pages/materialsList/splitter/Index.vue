@@ -14,8 +14,8 @@
 
 <script>
 import { mapState } from 'vuex'
-import Tree from 'src/pages/materialsList2/splitter/slot/tree/Index.vue'
-import Table from 'src/pages/materialsList2/splitter/slot/table/Index.vue'
+import Tree from 'src/pages/materialsList/splitter/slot/tree/Index.vue'
+import Table from 'src/pages/materialsList/splitter/slot/table/Index.vue'
 export default {
   components: {
     Tree,

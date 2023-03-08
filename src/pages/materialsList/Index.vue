@@ -18,8 +18,8 @@
 </template>
 
 <script>
-import Search from 'src/pages/materialsList2/search/Search.vue'
-import Splitter from 'src/pages/materialsList2/splitter/Index.vue'
+import Search from 'src/pages/materialsList/search/Search.vue'
+import Splitter from 'src/pages/materialsList/splitter/Index.vue'
 export default {
   components: {
     Search,

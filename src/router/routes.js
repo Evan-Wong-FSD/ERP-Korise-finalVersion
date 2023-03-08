@@ -26,7 +26,7 @@ const routes = [
       {
         path: '/物料清單2',
         name: '物料清單2',
-        component: () => import('pages/materialsList2/Index.vue')
+        component: () => import('pages/materialsList/Index.vue')
       },
       {
         path: '/材料資料',

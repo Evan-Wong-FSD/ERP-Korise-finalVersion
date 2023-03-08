@@ -32,10 +32,10 @@
 
 <script>
 import { mapState, mapMutations } from 'vuex'
-import TradeSelect from 'src/pages/materialsList2/splitter/slot/table/slot/search/TradeSelect.vue'
-import ColumnSelect from 'src/pages/materialsList2/splitter/slot/table/slot/search/ColumnSelect.vue'
-import TypeIn from 'src/pages/materialsList2/splitter/slot/table/slot/search/TypeIn.vue'
-import Buttons from 'src/pages/materialsList2/splitter/slot/table/slot/button/Buttons.vue'
+import TradeSelect from 'src/pages/materialsList/splitter/slot/table/slot/search/TradeSelect.vue'
+import ColumnSelect from 'src/pages/materialsList/splitter/slot/table/slot/search/ColumnSelect.vue'
+import TypeIn from 'src/pages/materialsList/splitter/slot/table/slot/search/TypeIn.vue'
+import Buttons from 'src/pages/materialsList/splitter/slot/table/slot/button/Buttons.vue'
 export default {
   components: {
     TradeSelect,
