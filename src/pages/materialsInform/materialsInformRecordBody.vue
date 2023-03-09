@@ -155,7 +155,8 @@ export default {
     },
     uploadUrl () {
       const partNumber = this.materialsInform.find(elem => elem.name === 'productPartNumber')
-      return `http://192.168.0.249:3003/api/upload?partNumber=${partNumber.value}`
+      // return `http://192.168.0.249:3003/api/upload?partNumber=${partNumber.value}`
+      return `http://localhost:3003/api/upload?partNumber=${partNumber.value}`
     }
   },
   beforeMount () {
