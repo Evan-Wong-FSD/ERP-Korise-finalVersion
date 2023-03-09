@@ -1,6 +1,5 @@
 <template>
   <section class="container-select">
-    {{ optionSelected }}
     <q-select dense multiple :value="optionSelected" :options="options" label="搜尋欄目">
       <template v-slot:selected>{{searchOptionClicked}}</template>
 

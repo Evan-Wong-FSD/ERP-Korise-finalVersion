@@ -80,12 +80,12 @@
           </q-chip>
         </div>
 
-        <!-- :url="uploadUrl" -->
         <q-uploader
           ref="uploader"
           accept=".pdf"
           v-show="false"
           :multiple="false"
+          :url="uploadUrl"
           @added ="addUploadFile"
           @uploaded="uploadFinished('positive', '上傳完成')"
           @failed ="uploadFinished('negative', '上傳失敗')"
@@ -152,10 +152,11 @@ export default {
       const productClassSerialNumber = this.materialsInform.find(elem => elem.name === 'productClassSerialNumber').value
       const productSubclassSerialNumber = this.materialsInform.find(elem => elem.name === 'productSubclassSerialNumber').value
       return productClassSerialNumber + productSubclassSerialNumber + this.productNameSerialNumber
+    },
+    uploadUrl () {
+      const partNumber = this.materialsInform.find(elem => elem.name === 'productPartNumber')
+      return `http://192.168.0.249:3003/api/upload?partNumber=${partNumber.value}`
     }
-    // uploadUrl () {
-    //   return `http://192.168.0.189:3003/api/upload?partNumber=${this.inputBox.partNumber.value}`
-    // }
   },
   beforeMount () {
     this.inputBox = JSON.parse(JSON.stringify(this.materialsInform))
@@ -298,7 +299,7 @@ export default {
       //     options.splice(0, options.length)
       //   }
       // }
-      // this.removeUploadFile()
+      this.removeUploadFile()
       this.inputBox.forEach(elem => {
         elem.value = ''
         if ('options' in elem) elem.options.splice(0, elem.options.length)

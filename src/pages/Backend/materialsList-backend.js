@@ -1,4 +1,4 @@
-export function materialsListBackend2 () {
+export function materialsListBackend () {
   const express = require('express')
   const app = express()
   const http = require('http').Server(app)

@@ -6,12 +6,12 @@ export function materialsInformBackend () {
   const mongodb = require('mongodb')
   const MongoClient = mongodb.MongoClient
   const ObjectID = mongodb.ObjectID
-  // const formidable = require('formidable')
-  // const path = require('path')
-  // const fs = require('fs')
+  const formidable = require('formidable')
+  const path = require('path')
+  const fs = require('fs')
 
-  // const form = new formidable.IncomingForm()
-  // const folder = path.join(__dirname, 'files')
+  const form = new formidable.IncomingForm()
+  const folder = path.join(__dirname, 'files')
 
   app.disable('x-powered-by')
   app.use(express.json())
