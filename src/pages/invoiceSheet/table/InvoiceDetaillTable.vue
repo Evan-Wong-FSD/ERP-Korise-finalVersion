@@ -31,10 +31,6 @@
         </q-tr>
       </template>
     </q-table>
-
-    <div class="q-mt-md">
-      Selected: {{ JSON.stringify(selected) }}
-    </div>
   </div>
 </template>
 
@@ -57,7 +53,7 @@ export default {
         { name: 'version', label: '型號', field: 'version', align: 'center' },
         { name: 'amount', label: '數量', field: 'amount', align: 'center', format: val => `${numberWithCommas(val)}` },
         { name: 'unitCost', label: '單價', field: 'unitCost', align: 'center', format: val => `$${numberWithCommas(val)}` },
-        { name: 'summary', label: '複價', field: 'summary', align: 'center', format: val => `$${numberWithCommas(val)}` },
+        { name: 'summary', label: '複價', field: 'summary', align: 'center', format: val => `$${numberWithCommas(Math.round(val))}` },
         { name: 'projectCode', label: 'Project code', field: 'projectCode', align: 'center' }
       ],
       numberWithCommas
@@ -100,7 +96,7 @@ export default {
     },
     calculateTotal (name) {
       return this.invoiceDetaillTableData.reduce((total, elem) => {
-        return total + Number(elem[name])
+        return total + Math.round(Number(elem[name]))
       }, 0)
     }
   },

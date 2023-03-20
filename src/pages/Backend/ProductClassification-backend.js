@@ -1,8 +1,12 @@
-export function ProductClassification () {
+// export function ProductClassification () {
+module.exports = function () {
   const express = require('express')
   const app = express()
-  const http = require('http').Server(app)
-  const port = 3008
+  // const http = require('http').Server(app)
+  const http = require('http')
+  const server = http.createServer(app)
+  // const port = 3008
+  app.set('port', process.env.PORT || 3008)
   const mongodb = require('mongodb')
   const ObjectID = mongodb.ObjectID
   const MongoClient = mongodb.MongoClient
@@ -16,6 +20,10 @@ export function ProductClassification () {
     next()
   })
 
+  server.listen(app.get('port'), function () {
+    console.log('listening on *:3008')
+  })
+
   const getParam = (href, strKey) => href.searchParams.get(strKey)
   const transformTypeInForRegex = (string) => {
     return string.split('').reduce((str, char) => {
@@ -24,7 +32,7 @@ export function ProductClassification () {
   }
 
   app.get('/api/calculateRowsNumber', function (req, res) {
-    MongoClient.connect('mongodb://127.0.0.1:27017', { useUnifiedTopology: true }, function (err0, client) {
+    MongoClient.connect('mongodb://127.0.0.1:12345', { useUnifiedTopology: true }, function (err0, client) {
       try {
         const href = new URL(`http://${req.headers.host}${req.url}`), filter = JSON.parse(getParam(href, 'filter'))
         const $addFields = {
@@ -58,7 +66,7 @@ export function ProductClassification () {
   })
 
   app.post('/api/obtainTableData', function (req, res) {
-    MongoClient.connect('mongodb://127.0.0.1:27017', { useUnifiedTopology: true }, function (err0, client) {
+    MongoClient.connect('mongodb://127.0.0.1:12345', { useUnifiedTopology: true }, function (err0, client) {
       try {
         const { oldRowsRendered, newRowsRendered, pagination, columns } = req.body, { descending, sortBy } = pagination
         const filter = JSON.parse(req.body.filter)
@@ -107,7 +115,7 @@ export function ProductClassification () {
   })
 
   app.get('/api/filterSelectOptions', function (req, res) {
-    MongoClient.connect('mongodb://127.0.0.1:27017', { useUnifiedTopology: true }, function (err0, client) {
+    MongoClient.connect('mongodb://127.0.0.1:12345', { useUnifiedTopology: true }, function (err0, client) {
       try {
         const href = new URL(`http://${req.headers.host}${req.url}`)
         const select = JSON.parse(getParam(href, 'select')), inputBoxs = JSON.parse(getParam(href, 'inputBoxs')), typeIn = getParam(href, 'typeIn')
@@ -144,7 +152,7 @@ export function ProductClassification () {
   })
 
   app.get('/api/obtainControlInputs', function (req, res) {
-    MongoClient.connect('mongodb://127.0.0.1:27017', { useUnifiedTopology: true }, function (err0, client) {
+    MongoClient.connect('mongodb://127.0.0.1:12345', { useUnifiedTopology: true }, function (err0, client) {
       try {
         const href = new URL(`http://${req.headers.host}${req.url}`)
         const inputBoxs = JSON.parse(getParam(href, 'inputBoxs')), targetLabel = getParam(href, 'targetLabel')
@@ -267,7 +275,7 @@ export function ProductClassification () {
   })
 
   app.post('/api/createProductClass', function (req, res) {
-    MongoClient.connect('mongodb://127.0.0.1:27017', { useUnifiedTopology: true }, function (err0, client) {
+    MongoClient.connect('mongodb://127.0.0.1:12345', { useUnifiedTopology: true }, function (err0, client) {
       try {
         const { inputBoxs } = req.body
         new Promise(resolve => {
@@ -307,7 +315,7 @@ export function ProductClassification () {
   })
 
   app.post('/api/updateProductClass', function (req, res) {
-    MongoClient.connect('mongodb://127.0.0.1:27017', { useUnifiedTopology: true }, async function (err0, client) {
+    MongoClient.connect('mongodb://127.0.0.1:12345', { useUnifiedTopology: true }, async function (err0, client) {
       try {
         const { id, controlInputs } = req.body
         const field = controlInputs.reduce((total, elem) => {
@@ -325,7 +333,7 @@ export function ProductClassification () {
   })
 
   app.get('/api/deleteProductClass', function (req, res) {
-    MongoClient.connect('mongodb://127.0.0.1:27017', { useUnifiedTopology: true }, async function (err0, client) {
+    MongoClient.connect('mongodb://127.0.0.1:12345', { useUnifiedTopology: true }, async function (err0, client) {
       try {
         const href = new URL(`http://${req.headers.host}${req.url}`), id = getParam(href, 'id')
         await client.db('ERP').collection('ProductClassification').deleteOne({ _id: new ObjectID(id) })
@@ -339,7 +347,7 @@ export function ProductClassification () {
     })
   })
 
-  http.listen(port, function () {
-    console.log('listening on *:3008')
-  })
+  // http.listen(port, function () {
+  //   console.log('listening on *:3008')
+  // })
 }

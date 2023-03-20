@@ -1,7 +1,8 @@
 <template>
   <section class="row justify-between">
     <Search v-on="$listeners" />
-    <Control v-bind="$attrs" v-on="$listeners" />
+    <!-- <Control v-bind="$attrs" v-on="$listeners" /> -->
+    <Control v-bind="$attrs" />
   </section>
 </template>
 

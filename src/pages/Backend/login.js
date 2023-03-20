@@ -1,9 +1,13 @@
-export function login () {
+// export function login () {
+module.exports = function () {
   const express = require('express')
   const cookieParser = require('cookie-parser')
   const app = express()
-  const http = require('http').Server(app)
-  const port = 3007
+  // const http = require('http').Server(app)
+  const http = require('http')
+  const server = http.createServer(app)
+  // const port = 3007
+  app.set('port', process.env.PORT || 3007)
   require('dotenv').config()
 
   app.use(express.json())
@@ -14,6 +18,10 @@ export function login () {
     res.header('Access-Control-Allow-Headers', 'Content-Type')
     res.header('Access-Control-Allow-Credentials', true)
     next()
+  })
+
+  server.listen(app.get('port'), function () {
+    console.log('listening on *:3007')
   })
 
   app.post('/api/checkUserId', function (req, res) {
@@ -38,7 +46,7 @@ export function login () {
     }
   })
 
-  http.listen(port, function () {
-    console.log('listening on *:3007')
-  })
+  // http.listen(port, function () {
+  //   console.log('listening on *:3007')
+  // })
 }

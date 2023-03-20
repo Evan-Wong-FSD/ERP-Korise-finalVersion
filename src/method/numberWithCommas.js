@@ -4,4 +4,4 @@ function numberWithCommas (x) {
 
 export { numberWithCommas }
 
-// module.exports = { numberWithCommas }
+// module.exports = numberWithCommas

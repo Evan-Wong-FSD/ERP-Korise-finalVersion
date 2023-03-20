@@ -1,19 +1,27 @@
-export function materialsInformBackend () {
+// export function materialsInformBackend () {
+module.exports = function () {
   const express = require('express')
   const app = express()
-  const http = require('http').Server(app)
-  const port = 3003
+  // const http = require('http').Server(app)
+  const http = require('http')
+  const server = http.createServer(app)
+  // const port = 3003
+  app.set('port', process.env.PORT || 3003)
   const mongodb = require('mongodb')
   const MongoClient = mongodb.MongoClient
   const ObjectID = mongodb.ObjectID
   const formidable = require('formidable')
   const path = require('path')
   const fs = require('fs')
+  // const throttle = require('express-throttle-bandwidth')
 
   const form = new formidable.IncomingForm()
   const folder = path.join(__dirname, 'files')
 
+  const getParam = (href, strKey) => href.searchParams.get(strKey)
+
   app.disable('x-powered-by')
+  // app.use(throttle(1024 * 128))
   app.use(express.json())
   app.all('*', function (req, res, next) {
     res.header('Access-Control-Allow-Origin', '*')
@@ -23,8 +31,12 @@ export function materialsInformBackend () {
     next()
   })
 
+  server.listen(app.get('port'), function () {
+    console.log('listening on *:3003')
+  })
+
   // app.post('/api/getRowsData', function (req, res) {
-  //   MongoClient.connect('mongodb://127.0.0.1:27017', { useUnifiedTopology: true }, function (err0, client) {
+  //   MongoClient.connect('mongodb://127.0.0.1:12345', { useUnifiedTopology: true }, function (err0, client) {
   //     if (!err0) {
   //       client.db('ERP').collection('materialsInform').aggregate([{ $match: {} }]).toArray((err1, document) => {
   //         if (!err1) {
@@ -48,7 +60,7 @@ export function materialsInformBackend () {
   // })
 
   // app.post('/api/saveMaterialsInform', function (req, res) {
-  //   MongoClient.connect('mongodb://127.0.0.1:27017', { useUnifiedTopology: true }, function (err0, client) {
+  //   MongoClient.connect('mongodb://127.0.0.1:12345', { useUnifiedTopology: true }, function (err0, client) {
   //     try {
   //       const { materialsInformInput } = req.body, { taxIdNumber, material, model } = materialsInformInput
   //       const $match = Object.fromEntries([[taxIdNumber.label, taxIdNumber.value], [material.label, material.value], [model.label, model.value]])
@@ -79,7 +91,7 @@ export function materialsInformBackend () {
   // })
 
   app.post('/api/updateMaterialsInform', function (req, res) {
-    MongoClient.connect('mongodb://127.0.0.1:27017', { useUnifiedTopology: true }, async function (err0, client) {
+    MongoClient.connect('mongodb://127.0.0.1:12345', { useUnifiedTopology: true }, async function (err0, client) {
       try {
         const { _id, materialsInform } = req.body
         const document = await materialsInform.reduce((total, elem) => {
@@ -96,13 +108,15 @@ export function materialsInformBackend () {
     })
   })
 
-  app.post('/api/upload', function (req, res) {
+  app.post('/api/upload', async function (req, res) {
     const url = new URL(req.url, `${req.protocol}://${req.headers.host}/`)
     const partNumber = url.searchParams.get('partNumber')
-    if (!fs.existsSync(folder)) fs.mkdirSync(folder)
+    if (!fs.existsSync(folder)) await fs.mkdirSync(folder)
     form.uploadDir = folder
     form.parse(req, async (err, fields, files) => {
       const fileName = Object.keys(files)[0]
+      console.log('partNumber')
+      console.log(partNumber)
       fs.renameSync(path.join(folder, files[fileName].newFilename), path.join(folder, partNumber + '.pdf'))
       if (err) {
         return res.status(400).json({
@@ -115,6 +129,17 @@ export function materialsInformBackend () {
     })
   })
 
+  app.get('/api/exportPdfFile', function (req, res) {
+    const href = new URL(`http://${req.headers.host}${req.url}`), productPartNumber = getParam(href, 'productPartNumber')
+    fs.readFile(path.join(folder, `${productPartNumber}.pdf`), async (err, data) => {
+      if (err) return res.send({ type: 'negative', message: '下載失敗' })
+      const base64Data = await data.toString('base64')
+      res.setHeader('Content-Type', 'application/pdf')
+      res.setHeader('Content-Disposition', `attachment; filename=${productPartNumber}.pdf`)
+      res.send({ type: 'positive', message: '下載成功', base64Data })
+    })
+  })
+
   // app.post('/api/downloadMaterialsInformPdf', function (req, res) {
   //   const fileName = req.body.partNumber + '.pdf'
   //   const pdfBuffer = fs.readFileSync(path.join(folder, fileName)).toString('base64')
@@ -122,7 +147,7 @@ export function materialsInformBackend () {
   // })
 
   // app.post('/api/getFirmInformOptions', function (req, res) {
-  //   MongoClient.connect('mongodb://127.0.0.1:27017', { useUnifiedTopology: true }, function (err0, client) {
+  //   MongoClient.connect('mongodb://127.0.0.1:12345', { useUnifiedTopology: true }, function (err0, client) {
   //     try {
   //       const { label, typeIn } = req.body
   //       const $addFields = { typeInMatched: { $regexMatch: { input: `$firmInform.${label}`, regex: typeIn, options: 'i' } } }
@@ -150,7 +175,7 @@ export function materialsInformBackend () {
   // })
 
   // app.post('/api/getMaterialOptions', function (req, res) {
-  //   MongoClient.connect('mongodb://127.0.0.1:27017', { useUnifiedTopology: true }, function (err0, client) {
+  //   MongoClient.connect('mongodb://127.0.0.1:12345', { useUnifiedTopology: true }, function (err0, client) {
   //     try {
   //       const { taxIdNumber, firm } = req.body
   //       const $match = Object.fromEntries([[taxIdNumber.label, taxIdNumber.value], [firm.label, firm.value]])
@@ -173,7 +198,7 @@ export function materialsInformBackend () {
   // })
 
   // app.post('/api/deleteMaterialsInform', function (req, res) {
-  //   MongoClient.connect('mongodb://127.0.0.1:27017', { useUnifiedTopology: true }, async function (err0, client) {
+  //   MongoClient.connect('mongodb://127.0.0.1:12345', { useUnifiedTopology: true }, async function (err0, client) {
   //     try {
   //       const { materialsInformSelected } = req.body
   //       await client.db('ERP').collection('materialsInform').deleteOne({ _id: new mongodb.ObjectID(materialsInformSelected._id) })
@@ -197,7 +222,6 @@ export function materialsInformBackend () {
   //   })
   // })
 
-  const getParam = (href, strKey) => href.searchParams.get(strKey)
   const transformTypeInForRegex = (string) => {
     console.log()
     return string.split('').reduce((str, char) => {
@@ -206,7 +230,7 @@ export function materialsInformBackend () {
   }
 
   app.get('/api/filterOptions', function (req, res) {
-    MongoClient.connect('mongodb://127.0.0.1:27017', { useUnifiedTopology: true }, function (err0, client) {
+    MongoClient.connect('mongodb://127.0.0.1:12345', { useUnifiedTopology: true }, function (err0, client) {
       try {
         const href = new URL(`http://${req.headers.host}${req.url}`)
         const name = getParam(href, 'name'), label = getParam(href, 'label'),
@@ -248,7 +272,7 @@ export function materialsInformBackend () {
   })
 
   app.get('/api/requestCorrelativeFirmInformValue', function (req, res) {
-    MongoClient.connect('mongodb://127.0.0.1:27017', { useUnifiedTopology: true }, function (err0, client) {
+    MongoClient.connect('mongodb://127.0.0.1:12345', { useUnifiedTopology: true }, function (err0, client) {
       try {
         const href = new URL(`http://${req.headers.host}${req.url}`), select = JSON.parse(getParam(href, 'select'))
         const $match = Object.fromEntries([[`firmInform.${select.label}`, select.value]])
@@ -273,7 +297,7 @@ export function materialsInformBackend () {
   })
 
   app.post('/api/insertMaterialsInform', function (req, res) {
-    MongoClient.connect('mongodb://127.0.0.1:27017', { useUnifiedTopology: true }, async function (err0, client) {
+    MongoClient.connect('mongodb://127.0.0.1:12345', { useUnifiedTopology: true }, async function (err0, client) {
       try {
         const { materialsInform } = req.body
         const findMaterialsInform = (name) => materialsInform.find(elem => elem.name === name)
@@ -312,7 +336,7 @@ export function materialsInformBackend () {
   })
 
   app.get('/api/filterProductName', function (req, res) {
-    MongoClient.connect('mongodb://127.0.0.1:27017', { useUnifiedTopology: true }, function (err0, client) {
+    MongoClient.connect('mongodb://127.0.0.1:12345', { useUnifiedTopology: true }, function (err0, client) {
       try {
         const href = new URL(`http://${req.headers.host}${req.url}`)
         const productClass = JSON.parse(getParam(href, 'productClass')), productSubclass = JSON.parse(getParam(href, 'productSubclass')),
@@ -339,7 +363,7 @@ export function materialsInformBackend () {
     })
 
     app.post('/api/requestProductNameSerialNumber', function (req, res) {
-      MongoClient.connect('mongodb://127.0.0.1:27017', { useUnifiedTopology: true }, function (err0, client) {
+      MongoClient.connect('mongodb://127.0.0.1:12345', { useUnifiedTopology: true }, function (err0, client) {
         try {
           const { productName, productClass, productSubclass } = req.body
           const $match = Object.fromEntries([[productClass.label, productClass.value], [productSubclass.label, productSubclass.value]])
@@ -365,7 +389,7 @@ export function materialsInformBackend () {
   })
 
   // app.post('/api/obtainTableData', function (req, res) {
-  //   MongoClient.connect('mongodb://127.0.0.1:27017', { useUnifiedTopology: true }, function (err0, client) {
+  //   MongoClient.connect('mongodb://127.0.0.1:12345', { useUnifiedTopology: true }, function (err0, client) {
   //     try {
   //       const { materialsInform } = req.body
   //       client.db('ERP').collection('materialsInform').aggregate([{ $match: {} }]).toArray((err1, document) => {
@@ -396,7 +420,7 @@ export function materialsInformBackend () {
   // })
 
   app.post('/api/obtainTableData', function (req, res) {
-    MongoClient.connect('mongodb://127.0.0.1:27017', { useUnifiedTopology: true }, function (err0, client) {
+    MongoClient.connect('mongodb://127.0.0.1:12345', { useUnifiedTopology: true }, function (err0, client) {
       try {
         const { oldRowsRendered, newRowsRendered, pagination, materialsInform } = req.body, { sortBy, descending } = pagination
         let { columns } = req.body
@@ -466,7 +490,7 @@ export function materialsInformBackend () {
   })
 
   app.post('/api/filterCaliber', function (req, res) {
-    MongoClient.connect('mongodb://127.0.0.1:27017', { useUnifiedTopology: true }, function (err0, client) {
+    MongoClient.connect('mongodb://127.0.0.1:12345', { useUnifiedTopology: true }, function (err0, client) {
       try {
         const { typeIn, productSubclass } = req.body
         const $addFields = { matched: { $regexMatch: { input: '$管材口徑', regex: transformTypeInForRegex(typeIn), options: 'i' } } }
@@ -492,7 +516,7 @@ export function materialsInformBackend () {
   })
 
   app.post('/api/requestCaliberSerialNumber', function (req, res) {
-    MongoClient.connect('mongodb://127.0.0.1:27017', { useUnifiedTopology: true }, function (err0, client) {
+    MongoClient.connect('mongodb://127.0.0.1:12345', { useUnifiedTopology: true }, function (err0, client) {
       try {
         const { caliber, productClass, productSubclass, caliberLabels } = req.body
         const $addFields = { matched: { $not: [{ $in: ['$管材口徑', caliberLabels] }] } }
@@ -517,7 +541,7 @@ export function materialsInformBackend () {
   })
 
   app.get('/api/calculateRowsNumber', function (req, res) {
-    MongoClient.connect('mongodb://127.0.0.1:27017', { useUnifiedTopology: true }, function (err0, client) {
+    MongoClient.connect('mongodb://127.0.0.1:12345', { useUnifiedTopology: true }, function (err0, client) {
       try {
         const href = new URL(`http://${req.headers.host}${req.url}`), filter = JSON.parse(getParam(href, 'filter'))
         const $addFields = {
@@ -551,7 +575,7 @@ export function materialsInformBackend () {
   })
 
   app.get('/api/deleteMaterialsInform', function (req, res) {
-    MongoClient.connect('mongodb://127.0.0.1:27017', { useUnifiedTopology: true }, async function (err0, client) {
+    MongoClient.connect('mongodb://127.0.0.1:12345', { useUnifiedTopology: true }, async function (err0, client) {
       try {
         const href = new URL(`http://${req.headers.host}${req.url}`), _id = getParam(href, '_id')
         await client.db('ERP').collection('materialsInform').deleteOne({ _id: new ObjectID(_id) })
@@ -586,7 +610,7 @@ export function materialsInformBackend () {
     return newSerialNumber
   }
 
-  http.listen(port, function () {
-    console.log('listening on *:3003')
-  })
+  // http.listen(port, function () {
+  //   console.log('listening on *:3003')
+  // })
 }

@@ -1,6 +1,7 @@
 <template>
   <div class="q-pa-md">
     <q-table
+      ref="table"
       :loading="generalTableLoading"
       :data="generalTableData"
       :columns="columns"
@@ -24,15 +25,18 @@
             <q-td v-text="'合計'" v-if="index === 0" :key="index" />
 
             <q-td v-else-if="elem.name === 'salesFigures'" :key="index">
-              ${{numberWithCommas(totalSalesFigures)}}
+              <!-- ${{numberWithCommas(totalSalesFigures)}} -->
+              ${{numberWithCommas(totalAmount.salesFigures)}}
             </q-td>
 
             <q-td v-else-if="elem.name === 'tax'" :key="index">
-              ${{numberWithCommas(totalTax)}}
+              <!-- ${{numberWithCommas(totalTax)}} -->
+              ${{numberWithCommas(totalAmount.tax)}}
             </q-td>
 
             <q-td v-else-if="elem.name === 'summary'" :key="index">
-              ${{numberWithCommas(totalSummary)}}
+              <!-- ${{numberWithCommas(totalSummary)}} -->
+              ${{numberWithCommas(totalAmount.summary)}}
             </q-td>
 
             <q-td v-else :key="index" />
@@ -65,35 +69,47 @@ export default {
         { name: 'invoiceNumber', label: '發票號', field: 'invoiceNumber', align: 'center' },
         { name: 'date', label: '時間', field: 'date', align: 'center' },
         { name: 'taxIdNumbers', label: '統編', field: 'taxIdNumbers', align: 'center' },
-        { name: 'salesFigures', label: '銷售額', field: 'salesFigures', align: 'center', format: val => `$${numberWithCommas(val)}` },
-        { name: 'tax', label: '稅金', field: 'tax', align: 'center', format: val => `$${numberWithCommas(val)}` },
-        { name: 'summary', label: '總額', field: 'summary', align: 'center', format: val => `$${numberWithCommas(val)}` },
+        { name: 'salesFigures', label: '銷售額', field: 'salesFigures', align: 'center', format: val => `$${numberWithCommas(Math.round(val))}` },
+        { name: 'tax', label: '稅金', field: 'tax', align: 'center', format: val => `$${numberWithCommas(Math.round(val))}` },
+        { name: 'summary', label: '總額', field: 'summary', align: 'center', format: val => `$${numberWithCommas(Math.round(val))}` },
         { name: 'invoiceType', label: '發票種類', field: 'invoiceType', align: 'center' },
         { name: 'remark', label: '備註', field: 'remark', align: 'center' }
       ],
-      numberWithCommas
+      numberWithCommas,
+      totalAmount: { salesFigures: 0, tax: 0, summary: 0 }
     }
   },
   computed: {
-    ...mapState('invoiceSheet', ['generalTableData', 'generalDataItemSelected']),
-    totalSalesFigures () {
-      return this.generalTableData.reduce((total, elem) => {
-        return total + Number(elem.salesFigures)
-      }, 0)
-    },
-    totalTax () {
-      return this.generalTableData.reduce((total, elem) => {
-        return total + Number(elem.tax)
-      }, 0)
-    },
-    totalSummary () {
-      return this.generalTableData.reduce((total, elem) => {
-        return total + Number(elem.summary)
-      }, 0)
-    }
+    ...mapState('invoiceSheet', ['generalTableData', 'generalDataItemSelected'])
+    // totalSalesFigures () {
+    //   return this.$refs.table
+    //     ? this.$refs.table.computedRows.reduce((total, data) => {
+    //       return total + Math.round(Number(data.salesFigures))
+    //     }, 0)
+    //     : 0
+    // },
+    // totalTax () {
+    //   return this.$refs.table
+    //     ? this.$refs.table.computedRows.reduce((total, data) => {
+    //       return total + Math.round(Number(data.tax))
+    //     }, 0)
+    //     : 0
+    // },
+    // totalSummary () {
+    //   return this.$refs.table
+    //     ? this.$refs.table.computedRows.reduce((total, data) => {
+    //       return total + Math.round(Number(data.summary))
+    //     }, 0)
+    //     : 0
+    // }
   },
   mounted () {
     this.synchronizeSelected()
+    console.log('this.$refs.table')
+    console.log(this.$refs.table)
+    this.computedTotal('salesFigures')
+    this.computedTotal('tax')
+    this.computedTotal('summary')
   },
   methods: {
     ...mapMutations('invoiceSheet', {
@@ -109,6 +125,13 @@ export default {
     },
     synchronizeSelected () {
       this.selected = this.generalDataItemSelected
+    },
+    computedTotal (item) {
+      // this.$nextTick(() => {
+      this.$set(this.totalAmount, item, this.$refs.table.computedRows.reduce((total, data) => {
+        return total + Math.round(Number(data[item]))
+      }, 0))
+      // })
     }
   }
 }

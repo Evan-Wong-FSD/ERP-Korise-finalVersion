@@ -80,6 +80,7 @@
           </q-chip>
         </div>
 
+        <!-- @failed ="uploadFinished('negative', '上傳失敗')" -->
         <q-uploader
           ref="uploader"
           accept=".pdf"
@@ -88,7 +89,6 @@
           :url="uploadUrl"
           @added ="addUploadFile"
           @uploaded="uploadFinished('positive', '上傳完成')"
-          @failed ="uploadFinished('negative', '上傳失敗')"
         />
 
         <q-btn
@@ -134,7 +134,8 @@ export default {
         'pipeMaterialNameSerialNumber',
         'productPartNumber'
       ],
-      uploadedFileChip: false
+      uploadedFileChip: false,
+      ipv4: null
     }
   },
   computed: {
@@ -155,8 +156,7 @@ export default {
     },
     uploadUrl () {
       const partNumber = this.materialsInform.find(elem => elem.name === 'productPartNumber')
-      // return `http://192.168.0.249:3003/api/upload?partNumber=${partNumber.value}`
-      return `http://localhost:3003/api/upload?partNumber=${partNumber.value}`
+      return `http://192.168.0.106:3003/api/upload?partNumber=${partNumber.value}`
     }
   },
   beforeMount () {
@@ -287,9 +287,6 @@ export default {
       this.uploadedFileChip = true
     },
     uploadFinished (type, message) {
-      if (type === 'positive') {
-        this.$refs.form.reset()
-      }
       this.$q.notify({ type, message })
     },
     onReset () {
@@ -339,10 +336,14 @@ export default {
         Object.assign(hiddenInput, elem)
       })
       if (this.menuSelected === '記錄') {
+        if (this.$refs.uploader.files.length !== 1) return this.$q.notify({ type: 'warning', message: '請先上傳檔案' })
         materialsInformtAPI.post('/api/insertMaterialsInform', { materialsInform: this.inputBox }).then(res => {
           const { type, message } = res.data
           this.$q.notify({ type, message })
-          if (type === 'positive') this.$refs.form.reset()
+          if (type === 'positive') {
+            this.$refs.uploader.upload()
+            this.$refs.form.reset()
+          }
         })
       } else if (this.menuSelected === '表單') {
         new Promise(resolve => {

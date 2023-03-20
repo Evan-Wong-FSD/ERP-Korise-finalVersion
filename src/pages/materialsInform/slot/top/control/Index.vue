@@ -1,6 +1,6 @@
 <template>
   <section class="row q-gutter-x-md">
-    <!-- <q-btn color="white" text-color="black" label="下載" /> -->
+    <q-btn color="white" text-color="black" label="下載" @click="exportPdfFile" />
     <q-btn color="white" text-color="black" label="更新" @click="shouldResetSearch ? openResetSearchDialog(onUpdate) : onUpdate()" />
     <q-btn color="warning" text-color="grey-1" label="重設" @click="onReset" />
     <q-btn color="negative" text-color="grey-1" label="刪除" @click="shouldResetSearch ? openResetSearchDialog(openDeleteDialog) : openDeleteDialog()" />
@@ -34,6 +34,7 @@
 
 <script>
 import { mapState, mapMutations } from 'vuex'
+import { materialsInformtAPI } from 'boot/axios'
 import { DialogProps } from 'src/method/DialogProps.js'
 import { initDialogPrototype } from 'src/mixins/initDialogPrototype.js'
 import BtnDialog from 'src/components/BtnDialog.vue'
@@ -54,6 +55,9 @@ export default {
     shouldResetSearch () {
       const hasSearchTypeIn = this.searchingColumns.findIndex(elem => Boolean(elem.typeIn)) > -1
       return this.searchOptionClicked && hasSearchTypeIn
+    },
+    selected () {
+      return this.$attrs.selected
     }
   },
   mixins: [initDialogPrototype],
@@ -178,6 +182,41 @@ export default {
       this.resetProductNameSerialNumber()
       this.resetProductPartNumber()
       this.openMaterialsInformRecordBodyDialog = false
+    },
+    exportPdfFile () {
+      if (this.selected.length === 0) return this.$q.notify({ type: 'warning', message: '請先勾選下載項目。' })
+      const { productPartNumber } = this.selected[0]
+      materialsInformtAPI.get('/api/exportPdfFile', { params: { productPartNumber } }).then(res => {
+        const { type, message, base64Data } = res.data
+        this.$q.notify({ type, message })
+        if (type === 'negative') return
+        const downloadUrl = window.URL.createObjectURL(new Blob([base64ToArrayBuffer(base64Data)], { type: 'application/pdf' }))
+        const link = document.createElement('a')
+        link.href = downloadUrl
+        link.download = `${productPartNumber}.pdf`
+        document.body.appendChild(link)
+        link.click()
+        link.remove()
+        window.URL.revokeObjectURL(downloadUrl)
+      })
+
+      function base64ToArrayBuffer (base64) {
+        // 用window.ato把base64编碼解碼
+        var binaryString = window.atob(base64)
+        var len = binaryString.length
+        // Uint8Array是ArrayBuffer的一種
+        // ArrayBuffer對像用於表示通用的，固定長度的原始二進制數據緩衝區。
+        var bytes = new Uint8Array(len)
+        for (var i = 0; i < len; i++) {
+          // 用charCodeAt把每個字元轉為16進制數據
+          // 從結構上看Buffer非常像一倍數組，它的元素為16進制的兩位數
+          // 實際上一個元素就表示內存中的一個字節
+          bytes[i] = binaryString.charCodeAt(i)
+        }
+        // 把Buffer轉為BufferSource回傳
+        // BufferSource是一種二進制數據
+        return bytes.buffer
+      }
     }
   }
 }

@@ -1,10 +1,14 @@
-import { numberWithCommas } from '../../method/numberWithCommas.js'
+// import { numberWithCommas } from '../../method/numberWithCommas.js'
 
-export function bomSheetBackend () {
+// export function bomSheetBackend () {
+module.exports = function () {
   const express = require('express')
   const app = express()
-  const http = require('http').Server(app)
-  const port = 3006
+  // const http = require('http').Server(app)
+  const http = require('http')
+  const server = http.createServer(app)
+  // const port = 3002
+  app.set('port', process.env.PORT || 3002)
   const ExcelJS = require('exceljs')
   const mongodb = require('mongodb')
   const ObjectID = mongodb.ObjectID
@@ -16,6 +20,8 @@ export function bomSheetBackend () {
   const year = String(today.getFullYear()), month = formattedString(today.getMonth() + 1), date = formattedString(today.getDate())
   const currentDate = year + month + date
 
+  const numberWithCommas = (x) => x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',')
+
   app.use(express.json())
   app.all('*', function (req, res, next) {
     res.header('Access-Control-Allow-Origin', '*')
@@ -25,8 +31,12 @@ export function bomSheetBackend () {
     next()
   })
 
+  server.listen(app.get('port'), function () {
+    console.log('listening on *:3002')
+  })
+
   app.post('/api/deleteFrequentlyUsedProductClass', function (req, res) {
-    MongoClient.connect('mongodb://127.0.0.1:27017', { useUnifiedTopology: true }, async function (err0, client) {
+    MongoClient.connect('mongodb://127.0.0.1:12345', { useUnifiedTopology: true }, async function (err0, client) {
       if (err0) {
         console.log(err0)
         client.close()
@@ -39,7 +49,7 @@ export function bomSheetBackend () {
   })
 
   app.post('/api/frequentlyUsedProductClassLabel', function (req, res) {
-    MongoClient.connect('mongodb://127.0.0.1:27017', { useUnifiedTopology: true }, function (err0, client) {
+    MongoClient.connect('mongodb://127.0.0.1:12345', { useUnifiedTopology: true }, function (err0, client) {
       if (err0) {
         console.log(err0)
         client.close()
@@ -64,7 +74,7 @@ export function bomSheetBackend () {
   })
 
   app.post('/api/productClassData', function (req, res) {
-    MongoClient.connect('mongodb://127.0.0.1:27017', { useUnifiedTopology: true }, function (err0, client) {
+    MongoClient.connect('mongodb://127.0.0.1:12345', { useUnifiedTopology: true }, function (err0, client) {
       if (err0) {
         console.log(err0)
         client.close()
@@ -85,7 +95,7 @@ export function bomSheetBackend () {
   })
 
   app.post('/api/newFrequentlyUsedProductClass', function (req, res) {
-    MongoClient.connect('mongodb://127.0.0.1:27017', { useUnifiedTopology: true }, async function (err0, client) {
+    MongoClient.connect('mongodb://127.0.0.1:12345', { useUnifiedTopology: true }, async function (err0, client) {
       if (err0) {
         console.log('Error => ', err0)
         client.close()
@@ -118,7 +128,7 @@ export function bomSheetBackend () {
   })
 
   app.post('/api/updateProductClass', function (req, res) {
-    MongoClient.connect('mongodb://127.0.0.1:27017', { useUnifiedTopology: true }, async function (err0, client) {
+    MongoClient.connect('mongodb://127.0.0.1:12345', { useUnifiedTopology: true }, async function (err0, client) {
       try {
         const { frequentlyUsedSelect, productClassData } = req.body
         res.end()
@@ -148,7 +158,7 @@ export function bomSheetBackend () {
       }
     }
 
-    MongoClient.connect('mongodb://127.0.0.1:27017', { useUnifiedTopology: true }, function (err0, client) {
+    MongoClient.connect('mongodb://127.0.0.1:12345', { useUnifiedTopology: true }, function (err0, client) {
       if (err0) {
         console.error(err0)
         client.close()
@@ -222,7 +232,7 @@ export function bomSheetBackend () {
       }
     }
 
-    MongoClient.connect('mongodb://127.0.0.1:27017', { useUnifiedTopology: true }, function (err0, client) {
+    MongoClient.connect('mongodb://127.0.0.1:12345', { useUnifiedTopology: true }, function (err0, client) {
       if (err0) {
         console.error(err0)
         client.close()
@@ -342,7 +352,7 @@ export function bomSheetBackend () {
         if (index === arr.length - 1) cost.push({ ...costPackage })
       })
 
-      MongoClient.connect('mongodb://127.0.0.1:27017', { useUnifiedTopology: true }, function (err0, client) {
+      MongoClient.connect('mongodb://127.0.0.1:12345', { useUnifiedTopology: true }, function (err0, client) {
         if (err0) {
           console.error(err0)
           client.close()
@@ -645,7 +655,7 @@ export function bomSheetBackend () {
   })
 
   app.post('/api/obtainBomData', function (req, res) {
-    MongoClient.connect('mongodb://127.0.0.1:27017', { useUnifiedTopology: true }, function (err0, client) {
+    MongoClient.connect('mongodb://127.0.0.1:12345', { useUnifiedTopology: true }, function (err0, client) {
       if (err0) {
         console.error(err0)
         client.close()
@@ -665,7 +675,7 @@ export function bomSheetBackend () {
   })
 
   app.post('/api/deleteBomData', function (req, res) {
-    MongoClient.connect('mongodb://127.0.0.1:27017', { useUnifiedTopology: true }, async function (err0, client) {
+    MongoClient.connect('mongodb://127.0.0.1:12345', { useUnifiedTopology: true }, async function (err0, client) {
       if (err0) {
         console.error(err0)
         client.close()
@@ -688,7 +698,7 @@ export function bomSheetBackend () {
     })
   })
 
-  http.listen(port, function () {
-    console.log('listening on *:3006')
-  })
+  // http.listen(port, function () {
+  //   console.log('listening on *:3002')
+  // })
 }

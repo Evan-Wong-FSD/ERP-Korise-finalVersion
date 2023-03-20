@@ -23,14 +23,14 @@
                 :type="inputType(elem1)"
                 :style="`width: ${(backgroundWidth - 250) / 2}px;`"
                 :error="isValid(elem1)"
-                :rules="ternaryOperator([''], [ val => val !== null && val.length > 0 || `'${elem1}' 為空值`], elem1, '統編', '公司名稱', 'Email', '公司電話', '公司所在地', '傳真', '網址', '備註 (選填)')"
-                :readonly="ternaryOperator(true, false, elem1, '統編', '公司名稱', '公司電話', '公司所在地', '傳真')"
-                :outlined="ternaryOperator(false, true, elem1, '統編', '公司名稱', '公司電話', '公司所在地', '傳真')"
-                :borderless="ternaryOperator(true, false, elem1, '統編', '公司名稱', '公司電話', '公司所在地', '傳真')"
-                :clearable="ternaryOperator(false, true, elem1, '統編', '公司名稱', '公司電話', '公司所在地', '傳真')"
-                :label="ternaryOperator(null, elem1, elem1, '統編', '公司名稱', '公司電話', '公司所在地', '傳真')"
-                v-bind:value="ternaryOperator(null, selectItems.firmInform[elem1], elem1, '統編', '公司名稱', '公司電話', '公司所在地', '傳真')"
-                v-on:input="ternaryOperator(null, selectItems.firmInform[elem1] = $event, elem1, '統編', '公司名稱', '公司電話', '公司所在地', '傳真')"
+                :rules="ternaryOperator([''], [ val => val !== null && val.length > 0 || `'${elem1}' 為空值`], elem1, '統編', '公司名稱', 'Email', '電話', '公司所在地', '傳真', '網址', '備註 (選填)')"
+                :readonly="ternaryOperator(true, false, elem1, '統編', '公司名稱', '電話', '公司所在地', '傳真')"
+                :outlined="ternaryOperator(false, true, elem1, '統編', '公司名稱', '電話', '公司所在地', '傳真')"
+                :borderless="ternaryOperator(true, false, elem1, '統編', '公司名稱', '電話', '公司所在地', '傳真')"
+                :clearable="ternaryOperator(false, true, elem1, '統編', '公司名稱', '電話', '公司所在地', '傳真')"
+                :label="ternaryOperator(null, elem1, elem1, '統編', '公司名稱', '電話', '公司所在地', '傳真')"
+                v-bind:value="ternaryOperator(null, selectItems.firmInform[elem1], elem1, '統編', '公司名稱', '電話', '公司所在地', '傳真')"
+                v-on:input="ternaryOperator(null, selectItems.firmInform[elem1] = $event, elem1, '統編', '公司名稱', '電話', '公司所在地', '傳真')"
                 v-for="(elem1, index1) in Object.keys(selectItems.firmInform)"
                 :key="index1"
               >
@@ -136,8 +136,8 @@
                     v-bind:value="selectItems.firmInform[elem1][elem3]"
                     v-on:input="selectItems.firmInform[elem1][elem3] = $event"
                     :style="`min-width: ${inputBoxWidth / 3}px`"
-                    v-if="elem1 === '公司電話' && index3 < 2"
-                    v-for="(elem3, index3) in Object.keys(selectItems.firmInform.公司電話)"
+                    v-if="elem1 === '電話' && index3 < 2"
+                    v-for="(elem3, index3) in Object.keys(selectItems.firmInform.電話)"
                     :key="index3"
                   />
                 </template>
@@ -158,9 +158,9 @@
                     type="tel"
                     label="電話號碼"
                     name="電話號碼"
-                    v-model="selectItems.firmInform.公司電話.電話號碼"
+                    v-model="selectItems.firmInform.電話.電話號碼"
                     :style="`min-width: ${inputBoxWidth / 3}px`"
-                    v-if="elem1 === '公司電話'"
+                    v-if="elem1 === '電話'"
                   />
                 </template>
 
@@ -388,7 +388,7 @@ export default {
           },
           地址: '',
           負責人: '',
-          公司電話: {
+          電話: {
             電話國際區號: null,
             電話區碼: null,
             電話號碼: null
@@ -517,27 +517,27 @@ export default {
           this.errorMessage = `'${elem}' 為空值`
           return true
         }
-      } else if (elem === '公司電話') {
-        if (this.selectItems.firmInform.公司電話.電話國際區號 === '') {
+      } else if (elem === '電話') {
+        if (this.selectItems.firmInform.電話.電話國際區號 === '') {
           this.errorMessage = "'電話國際區號' 為空值"
           return true
-        } else if (isNaN(this.selectItems.firmInform.公司電話.電話國際區號)) {
+        } else if (isNaN(this.selectItems.firmInform.電話.電話國際區號)) {
           this.errorMessage = "請輸入正確 '電話國際區號'"
           return true
-        } else if (this.regions.includes(this.selectItems.firmInform.公司所在地) && this.selectItems.firmInform.公司電話.電話區碼 === '') {
+        } else if (this.regions.includes(this.selectItems.firmInform.公司所在地) && this.selectItems.firmInform.電話.電話區碼 === '') {
           this.errorMessage = "'電話區碼' 為空值"
           return true
-        } else if (isNaN(this.selectItems.firmInform.公司電話.電話區碼)) {
+        } else if (isNaN(this.selectItems.firmInform.電話.電話區碼)) {
           this.errorMessage = "請輸入正確 '電話區碼'"
           return true
-        } else if (this.selectItems.firmInform.公司電話.電話號碼 === '') {
+        } else if (this.selectItems.firmInform.電話.電話號碼 === '') {
           this.errorMessage = "'電話號碼' 為空值"
           return true
-        } else if (isNaN(this.selectItems.firmInform.公司電話.電話號碼)) {
+        } else if (isNaN(this.selectItems.firmInform.電話.電話號碼)) {
           this.errorMessage = "請輸入正確 '電話號碼'"
           return true
-        } else if (this.selectItems.firmInform.公司電話.電話號碼 !== null && this.regions.includes(this.selectItems.firmInform.公司所在地)) {
-          if (this.selectItems.firmInform.公司電話.電話號碼.length < 7 || this.selectItems.firmInform.公司電話.電話號碼.length > 8) {
+        } else if (this.selectItems.firmInform.電話.電話號碼 !== null && this.regions.includes(this.selectItems.firmInform.公司所在地)) {
+          if (this.selectItems.firmInform.電話.電話號碼.length < 7 || this.selectItems.firmInform.電話.電話號碼.length > 8) {
             this.errorMessage = "請輸入正確 '電話號碼'"
             return true
           }
@@ -630,7 +630,7 @@ export default {
     onReset () {
       if (this.step === 1) {
         console.log(1111111)
-        resetFunc(this.selectItems.firmInform, '傳真', '公司電話')
+        resetFunc(this.selectItems.firmInform, '傳真', '電話')
       } else if (this.step === 2) {
         console.log(22222222)
         resetFunc(this.selectItems.contactPersonInform, undefined, '聯絡人電話', '聯絡人手機')
@@ -657,7 +657,7 @@ export default {
             this.selectItems.firmInform.公司所在地 = null
             return
           }
-          if (inputValidChecking(this.isValidBoolean, 10, this.selectItems.firmInform, '統編', '公司名稱', '公司所在地', '傳真', '公司電話', '備註 (選填)') > 15) {
+          if (inputValidChecking(this.isValidBoolean, 10, this.selectItems.firmInform, '統編', '公司名稱', '公司所在地', '傳真', '電話', '備註 (選填)') > 15) {
             return this.$refs.stepper.next()
           }
         }, 500)
@@ -695,7 +695,7 @@ export default {
           this.step = 1
           if (!this.selectItemsInputs) {
             console.log(333333333)
-            resetFunc(this.selectItems.firmInform, '傳真', '公司電話')
+            resetFunc(this.selectItems.firmInform, '傳真', '電話')
             console.log(444444444)
             resetFunc(this.selectItems.contactPersonInform, undefined, '聯絡人電話', '聯絡人手機')
           }
@@ -718,9 +718,9 @@ export default {
       }
       this.isValidBoolean = this.isValid('統編')
     },
-    'selectItems.firmInform.公司電話': {
+    'selectItems.firmInform.電話': {
       handler (newValue, oldValue) {
-        this.isValidBoolean = this.isValid('公司電話')
+        this.isValidBoolean = this.isValid('電話')
       },
       immediate: true,
       deep: true
@@ -728,15 +728,15 @@ export default {
     'selectItems.firmInform.公司所在地': function (value) {
       if (value === null) {
         this.selectItems.firmInform.傳真.傳真國際區號 = null
-        this.selectItems.firmInform.公司電話.電話國際區號 = null
+        this.selectItems.firmInform.電話.電話國際區號 = null
         this.selectItems.firmInform.傳真.傳真區碼 = null
-        this.selectItems.firmInform.公司電話.電話區碼 = null
+        this.selectItems.firmInform.電話.電話區碼 = null
       } else {
         if (Object.keys(regions).includes(value)) {
           this.selectItems.firmInform.傳真.傳真國際區號 = '886'
-          this.selectItems.firmInform.公司電話.電話國際區號 = '886'
+          this.selectItems.firmInform.電話.電話國際區號 = '886'
           this.selectItems.firmInform.傳真.傳真區碼 = regions[value]
-          this.selectItems.firmInform.公司電話.電話區碼 = regions[value]
+          this.selectItems.firmInform.電話.電話區碼 = regions[value]
         }
       }
       this.isValidBoolean = this.isValid('公司所在地')

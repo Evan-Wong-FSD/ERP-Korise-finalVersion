@@ -12,7 +12,7 @@ const ProductClassifications = []
   await workbook.xlsx.readFile(filename)
   createProductClassification()
   // console.log(ProductClassifications)
-  MongoClient.connect('mongodb://127.0.0.1:27017', { useUnifiedTopology: true }, async function (err0, client) {
+  MongoClient.connect('mongodb://127.0.0.1:12345', { useUnifiedTopology: true }, async function (err0, client) {
     try {
       // await client.db('ERP').collection('ProductClassification').deleteMany({})
       await client.db('ERP').collection('ProductClassification').insertMany(ProductClassifications)

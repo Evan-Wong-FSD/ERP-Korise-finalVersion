@@ -116,11 +116,11 @@
                   <q-input
                     :style="`width: ${(backgroundWidth - 250) / 2}px;`"
                     readonly
-                    :outlined="ternaryOperator(false, true, elem2, '統編', '公司電話', '公司所在地', '傳真')"
-                    :borderless="ternaryOperator(true, false, elem2, '統編', '公司電話', '公司所在地', '傳真')"
-                    :label="ternaryOperator(null, elem2, elem2, '統編', '公司電話', '公司所在地', '傳真')"
-                    v-bind:value="ternaryOperator(null, elem1.firmInform[elem2], elem2, '統編', '公司電話', '公司所在地', '傳真')"
-                    v-on:input="ternaryOperator(null, elem1.firmInform[elem2] = $event, elem2, '統編', '公司電話', '公司所在地', '傳真')"
+                    :outlined="ternaryOperator(false, true, elem2, '統編', '電話', '公司所在地', '傳真')"
+                    :borderless="ternaryOperator(true, false, elem2, '統編', '電話', '公司所在地', '傳真')"
+                    :label="ternaryOperator(null, elem2, elem2, '統編', '電話', '公司所在地', '傳真')"
+                    v-bind:value="ternaryOperator(null, elem1.firmInform[elem2], elem2, '統編', '電話', '公司所在地', '傳真')"
+                    v-on:input="ternaryOperator(null, elem1.firmInform[elem2] = $event, elem2, '統編', '電話', '公司所在地', '傳真')"
                     v-for="(elem2, index2) in Object.keys(elem1.firmInform)"
                     :key="index2"
                   >
@@ -170,8 +170,8 @@
                         v-bind:value="elem1.firmInform[elem2][elem3]"
                         v-on:input="elem1.firmInform[elem2][elem3] = $event"
                         :style="`min-width: ${inputBoxWidth / 3}px`"
-                        v-if="elem2 === '公司電話' && index3 < 2"
-                        v-for="(elem3, index3) in Object.keys(elem1.firmInform.公司電話)"
+                        v-if="elem2 === '電話' && index3 < 2"
+                        v-for="(elem3, index3) in Object.keys(elem1.firmInform.電話)"
                         :key="index3"
                       />
                     </template>
@@ -193,10 +193,10 @@
                         readonly
                         label="電話號碼"
                         name="電話號碼"
-                        v-bind:value="elem1.firmInform.公司電話.電話號碼"
-                        v-on:input="elem1.firmInform.公司電話.電話號碼 = $event"
+                        v-bind:value="elem1.firmInform.電話.電話號碼"
+                        v-on:input="elem1.firmInform.電話.電話號碼 = $event"
                         :style="`min-width: ${inputBoxWidth / 3}px`"
-                        v-if="elem2 === '公司電話'"
+                        v-if="elem2 === '電話'"
                       />
                     </template>
 
