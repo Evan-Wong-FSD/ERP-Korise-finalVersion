@@ -38,18 +38,18 @@ const resetProductSubclassSerialNumber = (state) => {
   productSubclassSerialNumber.value = ''
 }
 
-const updatePipeMaterial = (state, value) => {
-  const { materialsInform } = state, { selects } = value
-  const pipeMaterialSerialNumberNames = ['caliberSerialNumber', 'pipeMaterialNameSerialNumber']
-  selects.forEach(select => {
-    const { serialNumber } = select.options.find(opt => opt.label === select.value)
-    const pipeMaterialElem = materialsInform.find(elem => elem.name === select.name)
-    const pipeMaterialSerialNumberName = pipeMaterialSerialNumberNames.find(elem => elem.includes(select.name))
-    const pipeMaterialSerialNumberElem = materialsInform.find(elem => elem.name === pipeMaterialSerialNumberName)
-    pipeMaterialElem.value = select.value
-    pipeMaterialSerialNumberElem.value = serialNumber
-  })
-}
+// const updatePipeMaterial = (state, value) => {
+//   const { materialsInform } = state, { selects } = value
+//   const pipeMaterialSerialNumberNames = ['caliberSerialNumber', 'pipeMaterialNameSerialNumber']
+//   selects.forEach(select => {
+//     const { serialNumber } = select.options.find(opt => opt.label === select.value)
+//     const pipeMaterialElem = materialsInform.find(elem => elem.name === select.name)
+//     const pipeMaterialSerialNumberName = pipeMaterialSerialNumberNames.find(elem => elem.includes(select.name))
+//     const pipeMaterialSerialNumberElem = materialsInform.find(elem => elem.name === pipeMaterialSerialNumberName)
+//     pipeMaterialElem.value = select.value
+//     pipeMaterialSerialNumberElem.value = serialNumber
+//   })
+// }
 
 const resetPipeMaterial = (state) => {
   const pipeMaterialNames = ['caliber', 'caliberSerialNumber', 'pipeMaterialName', 'pipeMaterialNameSerialNumber']
@@ -72,10 +72,9 @@ const resetProductNameSerialNumber = (state) => {
   productNameSerialNumber.value = ''
 }
 
-const updateProductPartNumber = (state, value) => {
-  const { materialsInform } = state, { partNumber } = value
-  const productPartNumber = materialsInform.find(elem => elem.name === 'productPartNumber')
-  productPartNumber.value = partNumber
+const updateProductPartNumber = (state) => {
+  const retrieve = (name) => state.materialsInform.find(elem => elem.name === name)
+  retrieve('productPartNumber').value = retrieve('productClassSerialNumber').value + retrieve('productSubclassSerialNumber').value + retrieve('productNameSerialNumber').value
 }
 
 const resetProductPartNumber = (state) => {
@@ -123,6 +122,26 @@ const resetTableDataSelected = (state, value) => {
   state.tableDataSelected.splice(0, state.tableDataSelected.length)
 }
 
+const updatePipeMaterial = (state, value) => {
+  const { materialsInform } = state, { productSubclass } = value
+  if (productSubclass.value !== '方管') value.pipeMaterial = value.pipeMaterial.filter(elem => elem.name !== 'thickness')
+  value.pipeMaterial.forEach(elem => {
+    const pipeMaterialInform = materialsInform.find(item => item.name === elem.name)
+    const pipeMaterialInformSerialNumber = materialsInform.find(item => item.name === elem.name + 'SerialNumber')
+    pipeMaterialInform.value = elem.value.label
+    pipeMaterialInformSerialNumber.value = elem.value.serialNumber
+  })
+}
+
+const resetModel = (state) => {
+  const resetList = ['model', 'caliber', 'caliberSerialNumber', 'thickness', 'thicknessSerialNumber', 'pipeMaterialName', 'pipeMaterialNameSerialNumber']
+  resetList.forEach(name => {
+    const inputItem = state.materialsInform.find(elem => elem.name === name)
+    inputItem.value = ''
+    if ('options' in inputItem) inputItem.options.splice(0, inputItem.length)
+  })
+}
+
 export {
   updateMenuSelected,
   updateMaterialsInform,
@@ -144,5 +163,6 @@ export {
   resetOptionClicked,
   loadTableData,
   updateTableDataSelected,
-  resetTableDataSelected
+  resetTableDataSelected,
+  resetModel
 }

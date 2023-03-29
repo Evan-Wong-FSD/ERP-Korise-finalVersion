@@ -13,15 +13,11 @@ module.exports = function () {
   const formidable = require('formidable')
   const path = require('path')
   const fs = require('fs')
-  // const throttle = require('express-throttle-bandwidth')
 
   const form = new formidable.IncomingForm()
   const folder = path.join(__dirname, 'files')
 
-  const getParam = (href, strKey) => href.searchParams.get(strKey)
-
   app.disable('x-powered-by')
-  // app.use(throttle(1024 * 128))
   app.use(express.json())
   app.all('*', function (req, res, next) {
     res.header('Access-Control-Allow-Origin', '*')
@@ -36,7 +32,7 @@ module.exports = function () {
   })
 
   // app.post('/api/getRowsData', function (req, res) {
-  //   MongoClient.connect('mongodb://127.0.0.1:12345', { useUnifiedTopology: true }, function (err0, client) {
+  //   MongoClient.connect('mongodb://127.0.0.1:27017', { useUnifiedTopology: true }, function (err0, client) {
   //     if (!err0) {
   //       client.db('ERP').collection('materialsInform').aggregate([{ $match: {} }]).toArray((err1, document) => {
   //         if (!err1) {
@@ -60,7 +56,7 @@ module.exports = function () {
   // })
 
   // app.post('/api/saveMaterialsInform', function (req, res) {
-  //   MongoClient.connect('mongodb://127.0.0.1:12345', { useUnifiedTopology: true }, function (err0, client) {
+  //   MongoClient.connect('mongodb://127.0.0.1:27017', { useUnifiedTopology: true }, function (err0, client) {
   //     try {
   //       const { materialsInformInput } = req.body, { taxIdNumber, material, model } = materialsInformInput
   //       const $match = Object.fromEntries([[taxIdNumber.label, taxIdNumber.value], [material.label, material.value], [model.label, model.value]])
@@ -91,7 +87,7 @@ module.exports = function () {
   // })
 
   app.post('/api/updateMaterialsInform', function (req, res) {
-    MongoClient.connect('mongodb://127.0.0.1:12345', { useUnifiedTopology: true }, async function (err0, client) {
+    MongoClient.connect('mongodb://127.0.0.1:27017', { useUnifiedTopology: true }, async function (err0, client) {
       try {
         const { _id, materialsInform } = req.body
         const document = await materialsInform.reduce((total, elem) => {
@@ -115,8 +111,6 @@ module.exports = function () {
     form.uploadDir = folder
     form.parse(req, async (err, fields, files) => {
       const fileName = Object.keys(files)[0]
-      console.log('partNumber')
-      console.log(partNumber)
       fs.renameSync(path.join(folder, files[fileName].newFilename), path.join(folder, partNumber + '.pdf'))
       if (err) {
         return res.status(400).json({
@@ -147,7 +141,7 @@ module.exports = function () {
   // })
 
   // app.post('/api/getFirmInformOptions', function (req, res) {
-  //   MongoClient.connect('mongodb://127.0.0.1:12345', { useUnifiedTopology: true }, function (err0, client) {
+  //   MongoClient.connect('mongodb://127.0.0.1:27017', { useUnifiedTopology: true }, function (err0, client) {
   //     try {
   //       const { label, typeIn } = req.body
   //       const $addFields = { typeInMatched: { $regexMatch: { input: `$firmInform.${label}`, regex: typeIn, options: 'i' } } }
@@ -175,7 +169,7 @@ module.exports = function () {
   // })
 
   // app.post('/api/getMaterialOptions', function (req, res) {
-  //   MongoClient.connect('mongodb://127.0.0.1:12345', { useUnifiedTopology: true }, function (err0, client) {
+  //   MongoClient.connect('mongodb://127.0.0.1:27017', { useUnifiedTopology: true }, function (err0, client) {
   //     try {
   //       const { taxIdNumber, firm } = req.body
   //       const $match = Object.fromEntries([[taxIdNumber.label, taxIdNumber.value], [firm.label, firm.value]])
@@ -198,7 +192,7 @@ module.exports = function () {
   // })
 
   // app.post('/api/deleteMaterialsInform', function (req, res) {
-  //   MongoClient.connect('mongodb://127.0.0.1:12345', { useUnifiedTopology: true }, async function (err0, client) {
+  //   MongoClient.connect('mongodb://127.0.0.1:27017', { useUnifiedTopology: true }, async function (err0, client) {
   //     try {
   //       const { materialsInformSelected } = req.body
   //       await client.db('ERP').collection('materialsInform').deleteOne({ _id: new mongodb.ObjectID(materialsInformSelected._id) })
@@ -222,15 +216,15 @@ module.exports = function () {
   //   })
   // })
 
+  const getParam = (href, strKey) => href.searchParams.get(strKey)
   const transformTypeInForRegex = (string) => {
-    console.log()
     return string.split('').reduce((str, char) => {
       return str.concat(/\W/.test(char) ? `\\${char}` : char)
     }, '')
   }
 
   app.get('/api/filterOptions', function (req, res) {
-    MongoClient.connect('mongodb://127.0.0.1:12345', { useUnifiedTopology: true }, function (err0, client) {
+    MongoClient.connect('mongodb://127.0.0.1:27017', { useUnifiedTopology: true }, function (err0, client) {
       try {
         const href = new URL(`http://${req.headers.host}${req.url}`)
         const name = getParam(href, 'name'), label = getParam(href, 'label'),
@@ -238,6 +232,7 @@ module.exports = function () {
         const collection = (() => {
           if (name === 'taxIdNumber' || name === 'firm') return 'firmInform'
           if (name === 'productClass' || name === 'productSubclass') return 'ProductClassification'
+          if (name === 'productName') return 'materialsInform'
         })()
         const input = collection === 'firmInform' ? `$firmInform.${label}` : `$${label}`
         const $addFields = { matched: { $regexMatch: { input, regex: transformTypeInForRegex(typeIn), options: 'i' } } }
@@ -247,13 +242,19 @@ module.exports = function () {
             ? Object.assign(total, Object.fromEntries([[`firmInform.${label}`, value]]))
             : Object.assign(total, Object.fromEntries([[label, value]]))
         }, {}))
+        // const $addToSet = collection === 'firmInform' ? `$firmInform.${label}` : (() => {
+        //   if (label === '產品種類') return { label: `$${label}`, serialNumber: '$種類料號' }
+        //   if (label === '產品材質') return { label: `$${label}`, serialNumber: '$材質料號' }
+        // })()
         const $addToSet = collection === 'firmInform' ? `$firmInform.${label}` : (() => {
-          if (label === '產品種類') return { label: `$${label}`, serialNumber: '$種類料號' }
-          if (label === '產品材質') return { label: `$${label}`, serialNumber: '$材質料號' }
+          if (name === 'productClass') return { label: `$${label}`, serialNumber: '$種類料號' }
+          if (name === 'productSubclass') return { label: `$${label}`, serialNumber: '$材質料號' }
+          if (name === 'productName') return { label: `$${label}` }
         })()
         const $group = Object.fromEntries([['_id', null], [label, { $addToSet }]])
-        const $project = Object.fromEntries([['_id', 0], [label, 1]])
-        client.db('ERP').collection(collection).aggregate([{ $addFields }, { $match }, { $group }, { $project }, { $limit: 5 }]).toArray((err1, document) => {
+        // const $project = Object.fromEntries([['_id', 0], [label, 1]])
+        // , { $project }, { $limit: 5 }
+        client.db('ERP').collection(collection).aggregate([{ $addFields }, { $match }, { $group }]).toArray((err1, document) => {
           try {
             res.send({ options: document.length > 0 ? document[0][label] : [] })
             client.close()
@@ -272,7 +273,7 @@ module.exports = function () {
   })
 
   app.get('/api/requestCorrelativeFirmInformValue', function (req, res) {
-    MongoClient.connect('mongodb://127.0.0.1:12345', { useUnifiedTopology: true }, function (err0, client) {
+    MongoClient.connect('mongodb://127.0.0.1:27017', { useUnifiedTopology: true }, function (err0, client) {
       try {
         const href = new URL(`http://${req.headers.host}${req.url}`), select = JSON.parse(getParam(href, 'select'))
         const $match = Object.fromEntries([[`firmInform.${select.label}`, select.value]])
@@ -297,7 +298,7 @@ module.exports = function () {
   })
 
   app.post('/api/insertMaterialsInform', function (req, res) {
-    MongoClient.connect('mongodb://127.0.0.1:12345', { useUnifiedTopology: true }, async function (err0, client) {
+    MongoClient.connect('mongodb://127.0.0.1:27017', { useUnifiedTopology: true }, async function (err0, client) {
       try {
         const { materialsInform } = req.body
         const findMaterialsInform = (name) => materialsInform.find(elem => elem.name === name)
@@ -306,7 +307,8 @@ module.exports = function () {
           [findMaterialsInform('firm').label, findMaterialsInform('firm').value],
           [findMaterialsInform('productClass').label, findMaterialsInform('productClass').value],
           [findMaterialsInform('productSubclass').label, findMaterialsInform('productSubclass').value],
-          [findMaterialsInform('productName').label, findMaterialsInform('productName').value]
+          [findMaterialsInform('productName').label, findMaterialsInform('productName').value],
+          [findMaterialsInform('model').label, findMaterialsInform('model').value]
         ])
         const $project = { _id: 1 }
         client.db('ERP').collection('materialsInform').aggregate([{ $match }, { $project }]).toArray(async (err1, document) => {
@@ -335,61 +337,61 @@ module.exports = function () {
     })
   })
 
-  app.get('/api/filterProductName', function (req, res) {
-    MongoClient.connect('mongodb://127.0.0.1:12345', { useUnifiedTopology: true }, function (err0, client) {
-      try {
-        const href = new URL(`http://${req.headers.host}${req.url}`)
-        const productClass = JSON.parse(getParam(href, 'productClass')), productSubclass = JSON.parse(getParam(href, 'productSubclass')),
-          select = JSON.parse(getParam(href, 'select')), typeIn = getParam(href, 'typeIn')
-        const $addFields = { matched: { $regexMatch: { input: `$${select.label}`, regex: transformTypeInForRegex(typeIn), options: 'i' } } }
-        const $match = Object.fromEntries([['matched', true], [productClass.label, productClass.value], [productSubclass.label, productSubclass.value]])
-        const $group = { _id: null, productFiltered: { $addToSet: { label: '$產品名稱', serialNumber: '$產品名稱流水號' } } }
-        const $project = { _id: 0 }
-        client.db('ERP').collection('materialsInform').aggregate([{ $addFields }, { $match }, { $group }, { $project }, { $limit: 5 }]).toArray((err1, document) => {
-          try {
-            res.send({ productNamesFiltered: document.length > 0 ? document[0].productFiltered : [] })
-            client.close()
-          } catch (err1) {
-            console.log(err1)
-            client.close()
-            res.end()
-          }
-        })
-      } catch (err0) {
-        console.log(err0)
-        client.close()
-        res.end()
-      }
-    })
+  // app.get('/api/filterProductName', function (req, res) {
+  //   MongoClient.connect('mongodb://127.0.0.1:27017', { useUnifiedTopology: true }, function (err0, client) {
+  //     try {
+  //       const href = new URL(`http://${req.headers.host}${req.url}`)
+  //       const productClass = JSON.parse(getParam(href, 'productClass')), productSubclass = JSON.parse(getParam(href, 'productSubclass')),
+  //         select = JSON.parse(getParam(href, 'select')), typeIn = getParam(href, 'typeIn')
+  //       const $addFields = { matched: { $regexMatch: { input: `$${select.label}`, regex: transformTypeInForRegex(typeIn), options: 'i' } } }
+  //       const $match = Object.fromEntries([['matched', true], [productClass.label, productClass.value], [productSubclass.label, productSubclass.value]])
+  //       const $group = { _id: null, productFiltered: { $addToSet: { label: '$產品名稱', serialNumber: '$產品名稱流水號' } } }
+  //       const $project = { _id: 0 }
+  //       client.db('ERP').collection('materialsInform').aggregate([{ $addFields }, { $match }, { $group }, { $project }, { $limit: 5 }]).toArray((err1, document) => {
+  //         try {
+  //           res.send({ productNamesFiltered: document.length > 0 ? document[0].productFiltered : [] })
+  //           client.close()
+  //         } catch (err1) {
+  //           console.log(err1)
+  //           client.close()
+  //           res.end()
+  //         }
+  //       })
+  //     } catch (err0) {
+  //       console.log(err0)
+  //       client.close()
+  //       res.end()
+  //     }
+  //   })
+  // })
 
-    app.post('/api/requestProductNameSerialNumber', function (req, res) {
-      MongoClient.connect('mongodb://127.0.0.1:12345', { useUnifiedTopology: true }, function (err0, client) {
-        try {
-          const { productName, productClass, productSubclass } = req.body
-          const $match = Object.fromEntries([[productClass.label, productClass.value], [productSubclass.label, productSubclass.value]])
-          const $group = { _id: null, productFiltered: { $addToSet: { label: '$產品名稱', serialNumber: '$產品名稱流水號' } } }
-          const $project = { _id: 0 }
-          client.db('ERP').collection('materialsInform').aggregate([{ $match }, { $group }, { $project }]).toArray((err1, document) => {
-            try {
-              res.send({ productNamesFiltered: [{ label: productName.value, serialNumber: document.length > 0 ? newSerialNumber(document[0].productFiltered, 3) : '000' }] })
-              client.close()
-            } catch (err1) {
-              console.log(err1)
-              client.close()
-              res.end()
-            }
-          })
-        } catch (err0) {
-          console.log(err0)
-          client.close()
-          res.end()
-        }
-      })
-    })
-  })
+  // app.post('/api/requestProductNameSerialNumber', function (req, res) {
+  //   MongoClient.connect('mongodb://127.0.0.1:27017', { useUnifiedTopology: true }, function (err0, client) {
+  //     try {
+  //       const { model, productClass, productSubclass } = req.body
+  //       const $match = Object.fromEntries([[productClass.label, productClass.value], [productSubclass.label, productSubclass.value]])
+  //       const $group = { _id: null, productFiltered: { $addToSet: { label: '$產品名稱', serialNumber: '$產品名稱流水號' } } }
+  //       const $project = { _id: 0 }
+  //       client.db('ERP').collection('materialsInform').aggregate([{ $match }, { $group }, { $project }]).toArray((err1, document) => {
+  //         try {
+  //           res.send({ productNamesFiltered: [{ label: model.value, serialNumber: document.length > 0 ? newSerialNumber(document[0].productFiltered, 3) : '000' }] })
+  //           client.close()
+  //         } catch (err1) {
+  //           console.log(err1)
+  //           client.close()
+  //           res.end()
+  //         }
+  //       })
+  //     } catch (err0) {
+  //       console.log(err0)
+  //       client.close()
+  //       res.end()
+  //     }
+  //   })
+  // })
 
   // app.post('/api/obtainTableData', function (req, res) {
-  //   MongoClient.connect('mongodb://127.0.0.1:12345', { useUnifiedTopology: true }, function (err0, client) {
+  //   MongoClient.connect('mongodb://127.0.0.1:27017', { useUnifiedTopology: true }, function (err0, client) {
   //     try {
   //       const { materialsInform } = req.body
   //       client.db('ERP').collection('materialsInform').aggregate([{ $match: {} }]).toArray((err1, document) => {
@@ -420,7 +422,7 @@ module.exports = function () {
   // })
 
   app.post('/api/obtainTableData', function (req, res) {
-    MongoClient.connect('mongodb://127.0.0.1:12345', { useUnifiedTopology: true }, function (err0, client) {
+    MongoClient.connect('mongodb://127.0.0.1:27017', { useUnifiedTopology: true }, function (err0, client) {
       try {
         const { oldRowsRendered, newRowsRendered, pagination, materialsInform } = req.body, { sortBy, descending } = pagination
         let { columns } = req.body
@@ -489,42 +491,73 @@ module.exports = function () {
     // }
   })
 
-  app.post('/api/filterCaliber', function (req, res) {
-    MongoClient.connect('mongodb://127.0.0.1:12345', { useUnifiedTopology: true }, function (err0, client) {
-      try {
-        const { typeIn, productSubclass } = req.body
-        const $addFields = { matched: { $regexMatch: { input: '$管材口徑', regex: transformTypeInForRegex(typeIn), options: 'i' } } }
-        const $match = { matched: true, 產品材質: productSubclass }
-        const $group = { _id: null, calibersFiltered: { $addToSet: { label: '$管材口徑', serialNumber: '$管材口徑流水號' } } }
-        const $project = { _id: 0 }
-        client.db('ERP').collection('materialsInform').aggregate([{ $addFields }, { $match }, { $group }, { $project }, { $limit: 5 }]).toArray((err1, document) => {
-          try {
-            res.send({ caliberOptionsFiltered: document.length > 0 ? document[0].calibersFiltered : [] })
-            client.close()
-          } catch (err1) {
-            console.log(err1)
-            client.close()
-            res.end()
-          }
-        })
-      } catch (err0) {
-        console.log(err0)
-        client.close()
-        res.end()
-      }
-    })
-  })
+  // app.post('/api/filterCaliber', function (req, res) {
+  //   MongoClient.connect('mongodb://127.0.0.1:27017', { useUnifiedTopology: true }, function (err0, client) {
+  //     try {
+  //       const { typeIn, productSubclass } = req.body
+  //       const $addFields = { matched: { $regexMatch: { input: '$管材口徑', regex: transformTypeInForRegex(typeIn), options: 'i' } } }
+  //       // const $match = { matched: true, 產品材質: productSubclass }
+  //       const $match = Object.assign({ matched: true }, Object.fromEntries([[productSubclass.label, productSubclass.value]]))
+  //       const $group = { _id: null, calibersFiltered: { $addToSet: { label: '$管材口徑', serialNumber: '$管材口徑流水號' } } }
+  //       const $project = { _id: 0 }
+  //       client.db('ERP').collection('materialsInform').aggregate([{ $addFields }, { $match }, { $group }, { $project }]).toArray((err1, document) => {
+  //         try {
+  //           res.send({ caliberOptionsFiltered: document.length > 0 ? document[0].calibersFiltered.slice(0, 5) : [] })
+  //           client.close()
+  //         } catch (err1) {
+  //           console.log(err1)
+  //           client.close()
+  //           res.end()
+  //         }
+  //       })
+  //     } catch (err0) {
+  //       console.log(err0)
+  //       client.close()
+  //       res.end()
+  //     }
+  //   })
+  // })
+
+  // app.post('/api/filterThickness', function (req, res) {
+  //   MongoClient.connect('mongodb://127.0.0.1:27017', { useUnifiedTopology: true }, function (err0, client) {
+  //     try {
+  //       const { typeIn, caliber } = req.body
+  //       const $addFields = { matched: { $regexMatch: { input: '$管材厚度', regex: transformTypeInForRegex(typeIn), options: 'i' } } }
+  //       const $match = Object.assign({ matched: true, 產品材質: '方管' }, Object.fromEntries([[caliber.label, caliber.value]]))
+  //       const $group = { _id: null, thicknessFiltered: { $addToSet: { label: '$管材厚度', serialNumber: '$管材厚度流水號' } } }
+  //       const $project = { _id: 0 }
+  //       client.db('ERP').collection('materialsInform').aggregate([{ $addFields }, { $match }, { $group }, { $project }]).toArray((err1, document) => {
+  //         try {
+  //           console.log('document[0].thicknessFiltered')
+  //           console.log(document[0].thicknessFiltered)
+  //           res.send({ thicknessOptionsFiltered: document.length > 0 ? document[0].thicknessFiltered.slice(0, 5) : [] })
+  //           client.close()
+  //         } catch (err1) {
+  //           console.log(err1)
+  //           client.close()
+  //           res.end()
+  //         }
+  //       })
+  //     } catch (err0) {
+  //       console.log(err0)
+  //       client.close()
+  //       res.end()
+  //     }
+  //   })
+  // })
 
   app.post('/api/requestCaliberSerialNumber', function (req, res) {
-    MongoClient.connect('mongodb://127.0.0.1:12345', { useUnifiedTopology: true }, function (err0, client) {
+    MongoClient.connect('mongodb://127.0.0.1:27017', { useUnifiedTopology: true }, function (err0, client) {
       try {
-        const { caliber, productClass, productSubclass, caliberLabels } = req.body
-        const $addFields = { matched: { $not: [{ $in: ['$管材口徑', caliberLabels] }] } }
-        const $match = Object.fromEntries([['matched', true], [productClass.label, productClass.value], [productSubclass.label, productSubclass.value]])
+        // const { caliber, productClass, productSubclass, caliberLabels } = req.body
+        const { caliber, productClass, productSubclass, serialNumberLengthRequired } = req.body
+        // const $addFields = { matched: { $not: [{ $in: ['$管材口徑', caliberLabels] }] } }
+        // const $match = Object.fromEntries([['matched', true], [productClass.label, productClass.value], [productSubclass.label, productSubclass.value]])
+        const $match = Object.fromEntries([[productClass.label, productClass.value], [productSubclass.label, productSubclass.value]])
         const $group = { _id: null, calibersFiltered: { $addToSet: { label: '$管材口徑', serialNumber: '$管材口徑流水號' } } }
-        client.db('ERP').collection('materialsInform').aggregate([{ $addFields }, { $match }, { $group }]).toArray((err1, document) => {
+        client.db('ERP').collection('materialsInform').aggregate([{ $match }, { $group }]).toArray((err1, document) => {
           try {
-            res.send({ caliberOptionsFiltered: [{ label: caliber.value, serialNumber: document.length > 0 ? newSerialNumber(document[0].calibersFiltered, 2) : '00' }] })
+            res.send({ inputWithSerialNumber: { label: caliber.value, serialNumber: document.length > 0 ? newSerialNumber(document[0].calibersFiltered, serialNumberLengthRequired) : '00' } })
             client.close()
           } catch (err1) {
             console.log(err0)
@@ -540,8 +573,182 @@ module.exports = function () {
     })
   })
 
+  app.post('/api/requestThicknessSerialNumber', function (req, res) {
+    MongoClient.connect('mongodb://127.0.0.1:27017', { useUnifiedTopology: true }, function (err0, client) {
+      try {
+        const { thickness, productSubclass, caliber, serialNumberLengthRequired } = req.body
+        const $match = Object.fromEntries([[productSubclass.label, productSubclass.value], [caliber.label, caliber.value]])
+        const $group = { _id: null, thicknessFiltered: { $addToSet: { label: '$管材厚度', serialNumber: '$管材厚度流水號' } } }
+        client.db('ERP').collection('materialsInform').aggregate([{ $match }, { $group }]).toArray((err1, document) => {
+          try {
+            res.send({ inputWithSerialNumber: { label: thickness.value, serialNumber: document.length > 0 ? newSerialNumber(document[0].thicknessFiltered, serialNumberLengthRequired) : '0' } })
+            client.close()
+          } catch (err1) {
+            console.log(err1)
+            client.close()
+            res.end()
+          }
+        })
+      } catch (err0) {
+        console.log(err0)
+        client.close()
+        res.end()
+      }
+    })
+  })
+
+  app.post('/api/requestPipeMaterialNameSerialNumber', function (req, res) {
+    MongoClient.connect('mongodb://127.0.0.1:27017', { useUnifiedTopology: true }, function (err0, client) {
+      try {
+        const { pipeMaterialName, thickness, productSubclass, caliber, serialNumberLengthRequired } = req.body
+        const $match = Object.fromEntries([[productSubclass.label, productSubclass.value], [caliber.label, caliber.value], [thickness.label, thickness.value]])
+        const $group = { _id: null, thicknessFiltered: { $addToSet: { label: '$管材名稱', serialNumber: '$管材名稱流水號' } } }
+        client.db('ERP').collection('materialsInform').aggregate([{ $match }, { $group }]).toArray((err1, document) => {
+          try {
+            res.send({
+              inputWithSerialNumber: {
+                label: pipeMaterialName.value,
+                serialNumber: document.length > 0
+                  ? newSerialNumber(document[0].thicknessFiltered, serialNumberLengthRequired)
+                  : productSubclass.value === '方管' ? '00' : '000'
+              }
+            })
+            client.close()
+          } catch (err1) {
+            console.log(err1)
+            client.close()
+            res.end()
+          }
+        })
+      } catch (err0) {
+        console.log(err0)
+        client.close()
+        res.end()
+      }
+    })
+  })
+
+  // app.post('/api/retrievePipeMaterialNameOptions', function (req, res) {
+  //   MongoClient.connect('mongodb://127.0.0.1:27017', { useUnifiedTopology: true }, function (err0, client) {
+  //     try {
+  //       const { productSubclass } = req.body
+  //       const $addFields = {
+  //         matched: productSubclass.value === '方管'
+  //           ? { $regexMatch: { input: '$管材名稱流水號', regex: /^\d{2}$/, options: 'i' } }
+  //           : { $regexMatch: { input: '$管材名稱流水號', regex: /^\d{3}$/, options: 'i' } }
+  //       }
+  //       const $match = { matched: true }
+  //       const $group = { _id: null, pipeMaterialNameOptions: { $addToSet: { label: '$管材名稱', serialNumber: '$管材名稱流水號' } } }
+  //       client.db('ERP').collection('materialsInform').aggregate([{$addFields}, { $match }, { $group }]).toArray((err1, document) => {
+  //         try {
+  //           const pipeMaterialNameOptionsFiltered = document.length === 0
+  //             ? []
+  //             : productSubclass.value === '方管'
+  //               ? document[0].pipeMaterialNameOptions.filter(option => Boolean(option.label)).reduce((total, option) => {
+  //                   option.serialNumber = /\d{2}$/.exec(option.serialNumber)[0]
+  //                   return [...total, option]
+  //                 }, [])
+  //               : document[0].pipeMaterialNameOptions
+  //           res.send({ pipeMaterialNameOptionsFiltered })
+  //           client.close()
+  //         } catch (err1) {
+  //           console.log(err1)
+  //           client.close()
+  //           res.end()
+  //         }
+  //       })
+  //     } catch (err0) {
+  //       console.log(err0)
+  //       client.close()
+  //       res.end()
+  //     }
+  //   })
+  // })
+
+  app.post('/api/filterPipeMaterial', function (req, res) {
+    MongoClient.connect('mongodb://127.0.0.1:27017', { useUnifiedTopology: true }, function (err0, client) {
+      try {
+        const { typeIn, item, reference } = req.body
+        const $addFields = { matched: { $regexMatch: { input: `$${item.label}`, regex: typeIn, options: 'i' } } }
+        const $match = Object.fromEntries ([
+          ['matched', true], ...Object.values(reference).map(elem => [elem.label, elem.value])
+        ])
+        const $group = { _id: null, options: { $addToSet: { label: `$${item.label}`, serialNumber: `$${item.label}流水號` } } }
+        client.db('ERP').collection('materialsInform').aggregate([{$addFields}, { $match }, { $group }]).toArray((err1, document) => {
+          try {
+            res.send({ options: document.length > 0 ? document[0].options.slice(0, 5) : [] })
+            client.close()
+          } catch (err1) {
+            res.end()
+            console.error(err1)
+            client.close()
+          }
+        })
+      } catch (error) {
+        console.log(err0)
+        client.close()
+        res.end()
+      }
+    })
+  })
+
+  app.post('/api/filterModel', function (req, res) {
+    MongoClient.connect('mongodb://127.0.0.1:27017', { useUnifiedTopology: true }, function (err0, client) {
+      try {
+        const { typeIn, reference } = req.body
+        const $addFields = { matched: { $regexMatch: { input: '$型號', regex: typeIn, options: 'i' } } }
+        const $match = Object.fromEntries ([
+          ['matched', true], ...Object.values(reference).map(elem => [elem.label, elem.value])
+        ])
+        const $group = { _id: null, options: { $addToSet: { label: '$型號', serialNumber: '$產品名稱流水號' } } }
+        client.db('ERP').collection('materialsInform').aggregate([{$addFields}, { $match }, { $group }]).toArray((err1, document) => {
+          try {
+            res.send({ options: document.length > 0 ? document[0].options.slice(0, 5) : [] })
+            client.close()
+          } catch (err1) {
+            console.log(err1)
+            client.close()
+            res.end()
+          }
+        })
+      } catch (err0) {
+        console.log(err0)
+        client.close()
+        res.end()
+      }
+    })
+  })
+
+  app.post('/api/requestProductNameSerialNumberByModel', function (req, res) {
+    MongoClient.connect('mongodb://127.0.0.1:27017', { useUnifiedTopology: true }, function (err0, client) {
+      try {
+        const { productClass, productSubclass, serialNumberLengthRequired } = req.body
+        const $match = { 產品種類: productClass, 產品材質: productSubclass }
+        const $group = { _id: null, productNameFiltered: { $addToSet: { label: '$產品名稱', serialNumber: '$產品名稱流水號' } } }
+        client.db('ERP').collection('materialsInform').aggregate([{ $match }, { $group }]).toArray((err1, document) => {
+          try {
+            res.send({
+              productNameSerialNumber: document.length > 0
+                ? newSerialNumber(document[0].productNameFiltered, serialNumberLengthRequired)
+                : '000'
+            })
+            client.close()  
+          } catch (err1) {
+            console.log(err1)
+            client.close()
+            res.end()
+          }
+        })
+      } catch (err0) {
+        console.log(err0)
+        client.close()
+        res.end()
+      }
+    })
+  })
+
   app.get('/api/calculateRowsNumber', function (req, res) {
-    MongoClient.connect('mongodb://127.0.0.1:12345', { useUnifiedTopology: true }, function (err0, client) {
+    MongoClient.connect('mongodb://127.0.0.1:27017', { useUnifiedTopology: true }, function (err0, client) {
       try {
         const href = new URL(`http://${req.headers.host}${req.url}`), filter = JSON.parse(getParam(href, 'filter'))
         const $addFields = {
@@ -575,7 +782,7 @@ module.exports = function () {
   })
 
   app.get('/api/deleteMaterialsInform', function (req, res) {
-    MongoClient.connect('mongodb://127.0.0.1:12345', { useUnifiedTopology: true }, async function (err0, client) {
+    MongoClient.connect('mongodb://127.0.0.1:27017', { useUnifiedTopology: true }, async function (err0, client) {
       try {
         const href = new URL(`http://${req.headers.host}${req.url}`), _id = getParam(href, '_id')
         await client.db('ERP').collection('materialsInform').deleteOne({ _id: new ObjectID(_id) })

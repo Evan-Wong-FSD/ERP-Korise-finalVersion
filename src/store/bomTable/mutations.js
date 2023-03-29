@@ -1,3 +1,5 @@
+import { v4 as uuidv4 } from 'uuid'
+
 const modifyTab = (state, value) => {
   state.tab = value
 }
@@ -75,10 +77,13 @@ const updateCheckboxStatus = (state, value) => {
 
 const insertProductInformOnTable = (state, value) => {
   const { tableData } = state
-  const { productClass, inputBox } = value
-  const pushIndex = tableData.slice(8).findIndex(elem => elem.column1 === productClass) + 8 + 1
+  // const { productClass, inputBox } = value
+  const { currentCostItem, inputBox } = value
+  // const pushIndex = tableData.slice(8).findIndex(elem => elem.column1 === productClass) + 8 + 1
+  const pushIndex = tableData.slice(8).findIndex(elem => elem.column1 === currentCostItem) + 8 + 1
   const data = inputBox.reduce((total, elem, index) => {
-    if (index === 1) total = Object.fromEntries([['id', productClass + Date.now()], ['column1', total.value]])
+    // if (index === 1) total = Object.fromEntries([['id', productClass + Date.now()], ['column1', total.value]])
+    if (index === 1) total = Object.fromEntries([['id', currentCostItem + Date.now()], ['column1', total.value]])
     elem = Object.fromEntries([[`column${index + 1}`, elem.value]])
     return Object.assign(total, elem)
   })
@@ -135,8 +140,6 @@ const resetBasicInformInput = (state) => {
     { name: 'clientPhoneNumber', label: '客戶電話', value: '' },
     { name: 'clientFaxNumber', label: '客戶傳真', value: '' }
   ]
-  console.log('state.basicInform')
-  console.log(state.basicInform)
 }
 
 const updateTableData = (state, value) => {
@@ -161,23 +164,23 @@ const resetTableData = (state) => {
 
 const resetProductPrice = (state) => {
   state.productPrice = [
-    { label: '產品名稱', value: '' },
-    { label: '型號', value: '' },
-    { label: '數量', value: '' },
-    { label: '單位', value: '' },
-    { label: '單價', value: '' },
-    { label: '備註', value: '' }
+    { id: uuidv4(), name: 'productName', label: '產品名稱', value: '' },
+    { id: uuidv4(), name: 'model', label: '型號', value: '' },
+    { id: uuidv4(), name: 'amount', label: '數量', value: '' },
+    { id: uuidv4(), name: 'unit', label: '單位', value: '' },
+    { id: uuidv4(), name: 'unitCost', label: '單價', value: '' },
+    { id: uuidv4(), name: 'remark', label: '備註', value: '' }
   ]
 }
 
 const resetcost = (state) => {
   state.cost = [
-    { label: '費用名稱', value: '' },
-    { label: '規格', value: '' },
-    { label: '數量', value: '' },
-    { label: '單位', value: '' },
-    { label: '單價', value: '' },
-    { label: '備註', value: '' }
+    { id: uuidv4(), name: 'costName', label: '費用名稱', value: '' },
+    { id: uuidv4(), name: 'model', label: '規格', value: '' },
+    { id: uuidv4(), name: 'amount', label: '數量', value: '' },
+    { id: uuidv4(), name: 'unit', label: '單位', value: '' },
+    { id: uuidv4(), name: 'unitCost', label: '單價', value: '' },
+    { id: uuidv4(), name: 'remark', label: '備註', value: '' }
   ]
 }
 

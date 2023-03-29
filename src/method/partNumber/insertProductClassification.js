@@ -3,8 +3,8 @@ const mongodb = require('mongodb')
 const MongoClient = mongodb.MongoClient
 
 const workbook = new ExcelJS.Workbook()
-// const filename = '/Volumes/ADATA UFD/卓面/瑋安企業/料號管理/產品種類.xlsx'
-const filename = '/Volumes/ADATA UFD/卓面/瑋安企業/料號管理/classifyMaterialSerialNumbers/2021-2023發票資料/待補資料/產品種類-1.xlsx'
+const filename = '/Volumes/ADATA UFD/卓面/瑋安企業/料號管理/產品種類.xlsx'
+// const filename = '/Volumes/ADATA UFD/卓面/瑋安企業/料號管理/classifyMaterialSerialNumbers/2021-2023發票資料/待補資料/產品種類-1.xlsx'
 
 const ProductClassifications = []
 
@@ -12,7 +12,7 @@ const ProductClassifications = []
   await workbook.xlsx.readFile(filename)
   createProductClassification()
   // console.log(ProductClassifications)
-  MongoClient.connect('mongodb://127.0.0.1:12345', { useUnifiedTopology: true }, async function (err0, client) {
+  MongoClient.connect('mongodb://127.0.0.1:27017', { useUnifiedTopology: true }, async function (err0, client) {
     try {
       // await client.db('ERP').collection('ProductClassification').deleteMany({})
       await client.db('ERP').collection('ProductClassification').insertMany(ProductClassifications)
@@ -25,7 +25,7 @@ const ProductClassifications = []
 })()
 
 function createProductClassification () {
-  const worksheet = workbook.getWorksheet('ProductClassification')
+  const worksheet = workbook.getWorksheet('productClassification')
   const columns = worksheet.getRow(1).values.filter(elem => elem)
   worksheet.eachRow((row, rowNumber) => {
     if (rowNumber > 1) {

@@ -40,13 +40,14 @@
           <q-input
             outlined
             clearable
-            mask="###"
+            mask="####"
             v-model="inputBox.year.value"
             :label="elem.label"
+            :shadow-text="inputBox.year.value ? '' : '請輸入公曆年份'"
             v-else-if="key === 'year'"
             :rules="[
               val => val && val.length > 0 || `${elem.label}不能為空`,
-              val => /^[^0]/.test(val) || `${elem.label}格式錯誤`
+              val => val > 1000 && /^\d{4}$/.test(val) || `${elem.label}格式錯誤`
             ]"
           />
 
@@ -153,8 +154,8 @@ export default {
     ...mapMutations('invoiceRecord', {
       updateStep: 'updateStep',
       resetInputsOnBaseOfPurchseRecord: 'resetInputsOnBaseOfPurchseRecord',
-      updateInputsOnBaseOfPurchseRecord: 'updateInputsOnBaseOfPurchseRecord',
-      updateProductNameOptions: 'updateProductNameOptions'
+      updateInputsOnBaseOfPurchseRecord: 'updateInputsOnBaseOfPurchseRecord'
+      // updateProductNameOptions: 'updateProductNameOptions'
     }),
     initInputBox () {
       const inputsOnBaseOfPurchseRecord = { ...this.inputsOnBaseOfPurchseRecord }
@@ -165,7 +166,7 @@ export default {
       }
     },
     saveDate (proxyDate) {
-      const timeStampDiffBetweenNowAndROC = 60305414760000
+      const timeStampDiffBetweenNowAndROC = 60305326602000
       const formattedDate = proxyDate.replace(/\//g, '-')
       this.inputBox.date.value = date.formatDate(Date.parse(formattedDate) - timeStampDiffBetweenNowAndROC, 'YYYY/MM/DD')
     },
@@ -199,22 +200,24 @@ export default {
       initInputBox()
     },
     onSubmit (inputBox) {
-      const { taxIdNumber, invoiceNumber } = inputBox
-      invoiceSheetAPI.post('/api/getPermissionForNextStep', { taxIdNumber, invoiceNumber }).then(res => {
-        const { hasInvoiceNumberExisted, productNameOptions } = res.data
-        if (hasInvoiceNumberExisted) {
-          this.updateProductNameOptions(productNameOptions)
+      // const { taxIdNumber, invoiceNumber } = inputBox
+      // invoiceSheetAPI.post('/api/getPermissionForNextStep', { taxIdNumber, invoiceNumber }).then(res => {
+      invoiceSheetAPI.post('/api/getPermissionForNextStep', { invoiceNumber: inputBox.invoiceNumber }).then(res => {
+        // const { hasInvoiceNumberExisted, productNameOptions } = res.data
+        if (res.data.hasInvoiceNumberExisted) {
+          // this.updateProductNameOptions(productNameOptions)
           this.invoiceNumberExistedRemind = true
-        } else if (productNameOptions) {
-          if (productNameOptions.length > 0) {
-            this.nextStep()
-          } else {
-            this.$q.notify({
-              type: 'negative',
-              message: `"${inputBox.firm.value}"沒有進項商品`
-            })
-          }
         }
+        // else if (productNameOptions) {
+        //   if (productNameOptions.length > 0) {
+        //     this.nextStep()
+        //   } else {
+        //     this.$q.notify({
+        //       type: 'negative',
+        //       message: `"${inputBox.firm.value}"沒有進項商品`
+        //     })
+        //   }
+        // }
       })
     },
     nextStep () {

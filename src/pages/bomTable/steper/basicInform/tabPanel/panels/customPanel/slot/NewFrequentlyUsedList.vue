@@ -59,7 +59,7 @@ export default {
     },
     resetNewFrequentlyUsedListInputOnGlobalBusEvent () {
       this.$root.$on('resetNewFrequentlyUsedListInput', () => {
-        this.$refs.form.reset()
+        if (this.$refs.form) this.$refs.form.reset()
       })
     }
   }

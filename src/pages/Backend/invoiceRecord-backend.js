@@ -40,7 +40,7 @@ module.exports = function () {
   })
 
   app.post('/api/initializeForRecord', function (req, res) {
-    MongoClient.connect('mongodb://127.0.0.1:12345', { useUnifiedTopology: true }, function (err0, client) {
+    MongoClient.connect('mongodb://127.0.0.1:27017', { useUnifiedTopology: true }, function (err0, client) {
       if (!err0) {
         client.db('ERP').collection('materialsInform').aggregate([{ $project: { _id: 0, 統編: 1, 公司名稱: 1 } }]).toArray((err1, document) => {
           if (!err1) {
@@ -71,7 +71,7 @@ module.exports = function () {
       res.end()
       return
     }
-    MongoClient.connect('mongodb://127.0.0.1:12345', { useUnifiedTopology: true }, function (err0, client) {
+    MongoClient.connect('mongodb://127.0.0.1:27017', { useUnifiedTopology: true }, function (err0, client) {
       if (err0) {
         client.close()
         console.error(err0)
@@ -84,6 +84,7 @@ module.exports = function () {
         return Object.assign(total, Object.fromEntries([[elem, { $push: `$${elem}` }]]))
       }, { _id: null })
       const $match = {}, $addFields = {}, $project = { _id: 0 }, aggregateProps = [{ $match }, { $group }, { $project }]
+      // const $match = {}, $addFields = {}, $project = { _id: 0 }, aggregateProps = [{ $match }]
       const verify = (item) => {
         $match[item] = true
         $project[item] = 0
@@ -153,7 +154,7 @@ module.exports = function () {
   })
 
   app.post('/api/deleteInvoiceRecord', function (req, res) {
-    MongoClient.connect('mongodb://127.0.0.1:12345', { useUnifiedTopology: true }, async function (err0, client) {
+    MongoClient.connect('mongodb://127.0.0.1:27017', { useUnifiedTopology: true }, async function (err0, client) {
       if (err0) {
         client.close()
         console.error(err0)
@@ -169,7 +170,7 @@ module.exports = function () {
   })
 
   app.post('/api/readInvoiceDetaill', function (req, res) {
-    MongoClient.connect('mongodb://127.0.0.1:12345', { useUnifiedTopology: true }, function (err0, client) {
+    MongoClient.connect('mongodb://127.0.0.1:27017', { useUnifiedTopology: true }, function (err0, client) {
       try {
         const { generalDataItemSelected, invoiceDetaillTableColumns } = req.body, { invoiceNumber, purchaseSalesItem } = generalDataItemSelected
         const $project = {}, $match = { 發票號: invoiceNumber, 進銷項: purchaseSalesItem }
@@ -202,13 +203,11 @@ module.exports = function () {
   })
 
   app.post('/api/updateInvoiceDetaill', function (req, res) {
-    MongoClient.connect('mongodb://127.0.0.1:12345', { useUnifiedTopology: true }, function (err0, client) {
+    MongoClient.connect('mongodb://127.0.0.1:27017', { useUnifiedTopology: true }, function (err0, client) {
       try {
         const { invoiceDetaillSelected } = req.body, _id = invoiceDetaillSelected[0]._id
         client.db('ERP').collection('invoiceRecord').aggregate([{ $match: { _id: new ObjectId(_id) } }]).toArray((err1, document) => {
           try {
-            console.log('document')
-            console.log(document)
             res.send({ document })
             client.close()
           } catch (err1) {
@@ -226,7 +225,7 @@ module.exports = function () {
   })
 
   app.post('/api/deleteInvoiceDetaill', function (req, res) {
-    MongoClient.connect('mongodb://127.0.0.1:12345', { useUnifiedTopology: true }, async function (err0, client) {
+    MongoClient.connect('mongodb://127.0.0.1:27017', { useUnifiedTopology: true }, async function (err0, client) {
       try {
         const { invoiceDetaillSelected } = req.body
         const _idInvoiceDetaill = invoiceDetaillSelected.map(elem => new ObjectId(elem._id))
@@ -242,7 +241,7 @@ module.exports = function () {
   })
 
   app.post('/api/updateInvoiceRecord', function (req, res) {
-    MongoClient.connect('mongodb://127.0.0.1:12345', { useUnifiedTopology: true }, async function (err0, client) {
+    MongoClient.connect('mongodb://127.0.0.1:27017', { useUnifiedTopology: true }, async function (err0, client) {
       try {
         const { _id, firstPage, secondPage } = req.body.invoiceRecord, { 單價, 數量 } = secondPage
         delete firstPage.blank
@@ -260,7 +259,7 @@ module.exports = function () {
   })
 
   app.post('/api/getFirmInformOptions', function (req, res) {
-    MongoClient.connect('mongodb://127.0.0.1:12345', { useUnifiedTopology: true }, function (err0, client) {
+    MongoClient.connect('mongodb://127.0.0.1:27017', { useUnifiedTopology: true }, function (err0, client) {
       try {
         const { label, typeInValue } = req.body
         const $addFields = { display: { $regexMatch: { input: `$firmInform.${label}`, regex: typeInValue, options: 'i' } } }
@@ -285,36 +284,39 @@ module.exports = function () {
   })
 
   app.post('/api/getPermissionForNextStep', function (req, res) {
-    MongoClient.connect('mongodb://127.0.0.1:12345', { useUnifiedTopology: true }, function (err0, client) {
+    MongoClient.connect('mongodb://127.0.0.1:27017', { useUnifiedTopology: true }, function (err0, client) {
       try {
-        const { taxIdNumber, invoiceNumber } = req.body
-        new Promise((resolve) => {
-          const $match = Object.fromEntries([[invoiceNumber.label, invoiceNumber.value]])
-          client.db('ERP').collection('invoiceRecord').aggregate(([{ $match }, { $project: { _id: 1 } }])).toArray((err1, document) => {
-            try {
-              resolve(document.length > 0)
-            } catch (err1) {
-              res.end()
-              client.close()
-              console.error(err1)
-            }
-          })
-        }).then((hasInvoiceNumberExisted) => {
-          const $match = Object.fromEntries([[taxIdNumber.label, taxIdNumber.value], ['進銷項', '進項']]), $project = { _id: 0, 產品名稱: 1 }
-          client.db('ERP').collection('materialsList').aggregate([{ $match }, { $project }]).toArray((err1, document) => {
-            try {
-              res.send({
-                hasInvoiceNumberExisted,
-                productNameOptions: document.map(elem => elem.產品名稱)
-              })
-              client.close()
-            } catch (err1) {
-              res.end()
-              client.close()
-              console.error(err1)
-            }
-          })
+        // const { taxIdNumber, invoiceNumber } = req.body
+        const { invoiceNumber } = req.body
+        // new Promise((resolve) => {
+        const $match = Object.fromEntries([[invoiceNumber.label, invoiceNumber.value]])
+        client.db('ERP').collection('invoiceRecord').aggregate(([{ $match }, { $count: 'invoiceNumberCount' }])).toArray((err1, document) => {
+          try {
+            // resolve(document.length > 0)
+            res.send({ hasInvoiceNumberExisted: document[0].invoiceNumberCount > 0 })
+            client.close()
+          } catch (err1) {
+            res.end()
+            client.close()
+            console.error(err1)
+          }
         })
+        // }).then((hasInvoiceNumberExisted) => {
+        //   const $match = Object.fromEntries([[taxIdNumber.label, taxIdNumber.value], ['進銷項', '進項']]), $project = { _id: 0, 產品名稱: 1 }
+        //   client.db('ERP').collection('materialsList').aggregate([{ $match }, { $project }]).toArray((err1, document) => {
+        //     try {
+        //       res.send({
+        //         hasInvoiceNumberExisted,
+        //         productNameOptions: document.map(elem => elem.產品名稱)
+        //       })
+        //       client.close()
+        //     } catch (err1) {
+        //       res.end()
+        //       client.close()
+        //       console.error(err1)
+        //     }
+        //   })
+        // })
       } catch (err0) {
         res.end()
         client.close()
@@ -324,7 +326,7 @@ module.exports = function () {
   })
 
   app.post('/api/getProductNameOptions', function (req, res) {
-    MongoClient.connect('mongodb://127.0.0.1:12345', { useUnifiedTopology: true }, function (err0, client) {
+    MongoClient.connect('mongodb://127.0.0.1:27017', { useUnifiedTopology: true }, function (err0, client) {
       try {
         const { firm, productClass } = req.body
         const $match = Object.fromEntries([[firm.label, firm.value], [productClass.label, productClass.value]])
@@ -348,7 +350,7 @@ module.exports = function () {
   })
 
   app.post('/api/getModelOptions', function (req, res) {
-    MongoClient.connect('mongodb://127.0.0.1:12345', { useUnifiedTopology: true }, function (err0, client) {
+    MongoClient.connect('mongodb://127.0.0.1:27017', { useUnifiedTopology: true }, function (err0, client) {
       try {
         const { productName, taxIdNumber } = req.body
         const $match = Object.assign({ 進銷項: '進項' }, Object.fromEntries([[taxIdNumber.label, taxIdNumber.value], [productName.label, productName.value]]))
@@ -371,7 +373,7 @@ module.exports = function () {
   })
 
   app.post('/api/getUnitPriceAndProjectCodeOptions', function (req, res) {
-    MongoClient.connect('mongodb://127.0.0.1:12345', { useUnifiedTopology: true }, function (err0, client) {
+    MongoClient.connect('mongodb://127.0.0.1:27017', { useUnifiedTopology: true }, function (err0, client) {
       try {
         const { model, productName, taxIdNumber } = req.body
         const $match = Object.fromEntries([[taxIdNumber.label, taxIdNumber.value], [productName.label, productName.value], [model.label, model.value]])
@@ -399,7 +401,7 @@ module.exports = function () {
   })
 
   app.post('/api/submitPurchaseRecord', function (req, res) {
-    MongoClient.connect('mongodb://127.0.0.1:12345', { useUnifiedTopology: true }, function (err0, client) {
+    MongoClient.connect('mongodb://127.0.0.1:27017', { useUnifiedTopology: true }, function (err0, client) {
       try {
         const convertFormat = (name, purchaseRecord) => {
           req.body[name] = Object.values(purchaseRecord).reduce((total, elem) => {
@@ -414,7 +416,6 @@ module.exports = function () {
         purchaseRecord.複價 = String(單價 * 數量)
         new Promise((resolve) => {
           const { 產品名稱, 統編 } = purchaseRecord, $match = { 產品名稱, 統編 }, $project = { _id: 0, 產品種類: 1 }
-          // client.db('ERP').collection('ProductClassification').aggregate([{ $match }, { $project }]).toArray((err1, document) => {
           client.db('ERP').collection('materialsInform').aggregate([{ $match }, { $project }]).toArray((err1, document) => {
             try {
               resolve(document[0])
@@ -439,7 +440,7 @@ module.exports = function () {
   })
 
   app.post('/api/getSerialNumberOptions', function (req, res) {
-    MongoClient.connect('mongodb://127.0.0.1:12345', { useUnifiedTopology: true }, function (err0, client) {
+    MongoClient.connect('mongodb://127.0.0.1:27017', { useUnifiedTopology: true }, function (err0, client) {
       try {
         const { serialNumberTypeIn } = req.body
         const $match = { serialNumberMatched: true, 'sheetInform.sheetName.value': '報價單' }
@@ -471,7 +472,7 @@ module.exports = function () {
   })
 
   app.post('/api/getDataOfQuotation', function (req, res) {
-    MongoClient.connect('mongodb://127.0.0.1:12345', { useUnifiedTopology: true }, function (err0, client) {
+    MongoClient.connect('mongodb://127.0.0.1:27017', { useUnifiedTopology: true }, function (err0, client) {
       try {
         const salesInvoiceRecords = []
         const result = {}
@@ -500,7 +501,7 @@ module.exports = function () {
                     salesInvoiceRecords.push({ 公司名稱: client.value, 統編: taxIdNumber.value })
                     const salesInvoiceRecord = salesInvoiceRecords[salesInvoiceRecords.length - 1]
                     salesInvoiceRecord[projectCode.label] = projectCode.value
-                    salesInvoiceRecord.產品種類 = elem.costClass
+                    salesInvoiceRecord.產品種類 = elem.costClass === '運費' ? '其他費用' : elem.costClass
                     salesInvoiceRecord.產品名稱 = item
                   })
                 })
@@ -518,7 +519,7 @@ module.exports = function () {
           client.db('ERP').collection('bomData').aggregate([{ $match: { _id: _idTableData } }, { $project: { _id: 0, data: 1 } }, { $unwind: '$data' }]).toArray((err1, document) => {
             try {
               salesInvoiceRecords.forEach(record => {
-                const { data } = document.slice(8, document.length - 2 - 1).find(elem => elem.data.column1 === record.產品名稱)
+                const { data } = document.slice(8, document.length - 1).find(elem => elem.data.column1 === record.產品名稱)
                 record.型號 = data.column2
                 record.數量 = data.column3
                 record.單價 = data.column5
@@ -543,37 +544,72 @@ module.exports = function () {
   })
 
   app.post('/api/insertSalesInvoiceRecords', function (req, res) {
-    MongoClient.connect('mongodb://127.0.0.1:12345', { useUnifiedTopology: true }, async function (err0, client) {
+    MongoClient.connect('mongodb://127.0.0.1:27017', { useUnifiedTopology: true }, async function (err0, client) {
       try {
         const { salesInvoiceRecords, invoiceNumber } = req.body
         const $match = Object.fromEntries([[invoiceNumber.label, invoiceNumber.value]])
-        client.db('ERP').collection('invoiceRecord').aggregate([{ $project: { _id: 0 } }, { $match }]).toArray((err1, document) => {
+        client.db('ERP').collection('invoiceRecord').aggregate([{ $project: { _id: 0 } }, { $match }]).toArray(async (err1, document) => {
           try {
-            new Promise((resolve) => {
-              if (document.length === 0) {
-                client.db('ERP').collection('invoiceRecord').insertMany(salesInvoiceRecords)
-                resolve()
-              } else {
-                const documentStringify = document.map(field => JSON.stringify(field))
-                const salesInvoiceRecordsStringify = salesInvoiceRecords.map(salesInvoiceRecord => JSON.stringify(salesInvoiceRecord))
-                const lostSalesInvoiceRecords = salesInvoiceRecordsStringify.filter(elem => !documentStringify.includes(elem)).map(elem => JSON.parse(elem))
-                if (lostSalesInvoiceRecords.length === 0) {
-                  resolve()
-                } else {
-                  lostSalesInvoiceRecords.forEach(async (elem, index, arr) => {
-                    await client.db('ERP').collection('invoiceRecord').updateOne(
-                      { 產品名稱: elem.產品名稱, 型號: elem.型號 },
-                      { $set: elem },
-                      { upsert: true }
-                    )
-                    if (index === arr.length - 1) resolve()
+            if (document.length === 0) {
+              new Promise(resolve => {
+                const $or = salesInvoiceRecords.reduce((total, elem) => {
+                  const $and = []
+                  const labelsRequired = elem.產品種類 === '管材' ? ['產品種類', '產品名稱', '型號'] : ['產品種類', '產品名稱']
+                  for (const label in elem) {
+                    if (labelsRequired.includes(label)) {
+                      $and.push({ $eq: [`$${label}`, elem[label]] })
+                    }
+                  }
+                  return [...total, { $and }]
+                }, [])
+                const $addFields = { matched: { $or } }
+                const $project = { _id: 0, 產品材質: 1, 產品名稱: 1, 型號: 1, 產品料號: 1 }
+                client.db('ERP').collection('materialsInform').aggregate([{ $addFields }, { $match: { matched: true } }, { $project }]).toArray(async (err1, document) => {
+                  try {
+                    document.forEach(field => {
+                      const record = salesInvoiceRecords.find(elem => {
+                        return elem.產品種類 === '管材' ? elem.型號 === field.型號 : elem.產品名稱 === field.產品名稱
+                      })
+                      record.產品料號 = field.產品料號
+                      record.產品材質 = field.產品材質
+                      record.稅金 = String(Math.floor(record.複價 * 0.05))
+                    })
+                    await client.db('ERP').collection('invoiceRecord').insertMany(salesInvoiceRecords)
+                    res.end()
+                    client.close()
+                  } catch (err1) {
+                    res.end()
+                    client.close()
+                    console.error(err1)
+                  }
+                })
+              })
+            } else {
+              const lostSalesInvoiceRecords = salesInvoiceRecords.filter(record => {
+                return !document.some(field => {
+                  return Object.keys(record).every(label => {
+                    return record[label] === field[label]
                   })
-                }
+                })
+              })
+              if (lostSalesInvoiceRecords.length === 0) {
+                res.end()
+                client.close()
+              } else {
+                lostSalesInvoiceRecords.forEach(async (elem, index, arr) => {
+                  elem.複價 = String(elem.單價 * elem.數量)
+                  elem.稅金 = String(Math.floor(elem.複價 * 0.05))
+                  await client.db('ERP').collection('invoiceRecord').updateOne(
+                    Object.assign({ 產品名稱: elem.產品名稱, 型號: elem.型號 }, $match),
+                    { $set: elem }
+                  )
+                  if (index === arr.length - 1) {
+                    res.end()
+                    client.close()
+                  }
+                })
               }
-            }).then(() => {
-              res.end()
-              client.close()
-            })
+            }
           } catch (err1) {
             res.end()
             client.close()
@@ -589,10 +625,12 @@ module.exports = function () {
   })
 
   app.post('/api/getRemainderOfProduct', function (req, res) {
-    MongoClient.connect('mongodb://127.0.0.1:12345', { useUnifiedTopology: true }, function (err0, client) {
+    MongoClient.connect('mongodb://127.0.0.1:27017', { useUnifiedTopology: true }, function (err0, client) {
       try {
-        const { taxIdNumber, model } = req.body
-        const $match = Object.fromEntries([[taxIdNumber.label, taxIdNumber.value], ['型號', model]])
+        const { productName, model } = req.body
+        const $match = model.value
+          ? Object.fromEntries([[productName.label, productName.value], [model.label, model.value]])
+          : Object.fromEntries([[productName.label, productName.value]])
         const $group = { _id: '$進銷項', count: { $sum: 1 } }
         client.db('ERP').collection('invoiceRecord').aggregate([{ $match }, { $group }]).toArray((err1, document) => {
           try {
@@ -645,7 +683,7 @@ module.exports = function () {
       // if (index < arr.length - 1) worksheet.columns = structuredClone(columns)
       if (index < arr.length - 1) worksheet.columns = JSON.parse(JSON.stringify(columns))
     })
-    MongoClient.connect('mongodb://127.0.0.1:12345', { useUnifiedTopology: true }, function (err0, client) {
+    MongoClient.connect('mongodb://127.0.0.1:27017', { useUnifiedTopology: true }, function (err0, client) {
       try {
         const invoiceNumbers = generalTableData.reduce((total, tableData) => {
           return total.includes(tableData.invoiceNumber) ? total : [...total, tableData.invoiceNumber]
@@ -745,9 +783,133 @@ module.exports = function () {
     })
   })
 
+  app.post('/api/filterProductClass', function (req, res) {
+    MongoClient.connect('mongodb://127.0.0.1:27017', { useUnifiedTopology: true }, function (err0, client) {
+      try {
+        const { typeIn, taxIdNumber } = req.body
+        const $match = Object.fromEntries([[taxIdNumber.label, taxIdNumber.value]])
+        const $group = { _id: null, options: { $addToSet: '$產品種類' } }, $project = { _id: 0 }
+        const props = [{ $match }, { $group }, { $project }]
+        if (typeIn) {
+          const $addFields = { matched: { $regexMatch: { input: '$產品種類', regex: typeIn, options: 'i' } } }
+          props.unshift({ $addFields  })
+          Object.assign($match, { matched: true })
+        }
+        client.db('ERP').collection('ProductClassification').aggregate(props).toArray((err1, document) => {
+          try {
+            const options = document.length > 0 ? document[0].options.filter(option => option).slice(0, 5) : []
+            res.send({ options })
+            client.close() 
+          } catch (err1) {
+            res.end()
+            console.error(err1)
+            client.close()
+          }
+        })
+      } catch (err0) {
+        res.end()
+        console.error(err0)
+        client.close()
+      }
+    })
+  })
+
+  app.post('/api/filterProductSubclass', function (req, res) {
+    MongoClient.connect('mongodb://127.0.0.1:27017', { useUnifiedTopology: true }, function (err0, client) {
+      try {
+        const { typeIn, taxIdNumber, productClass } = req.body
+        const $match = Object.fromEntries([[taxIdNumber.label, taxIdNumber.value], [productClass.label, productClass.value]])
+        const $group = { _id: null, options: { $addToSet: '$產品材質' } }, $project = { _id: 0 }
+        const props = [{ $match }, { $group }, { $project }]
+        if (typeIn) {
+          const $addFields = { matched: { $regexMatch: { input: '$產品材質', regex: typeIn, options: 'i' } } }
+          props.unshift({ $addFields  })
+          Object.assign($match, { matched: true })
+        }
+        client.db('ERP').collection('ProductClassification').aggregate(props).toArray((err1, document) => {
+          try {
+            const options = document.length > 0 ? document[0].options.filter(option => option).slice(0, 5) : []
+            res.send({ options })
+            client.close() 
+          } catch (err1) {
+            res.end()
+            console.error(err1)
+            client.close()
+          }
+        })
+      } catch (err0) {
+        res.end()
+        console.error(err0)
+        client.close()
+      }
+    })
+  })
+
+  app.post('/api/filterProductName', function (req, res) {
+    MongoClient.connect('mongodb://127.0.0.1:27017', { useUnifiedTopology: true }, function (err0, client) {
+      try {
+        const { typeIn, taxIdNumber, productClass, productSubclass } = req.body
+        const $match = Object.fromEntries([
+          [taxIdNumber.label, taxIdNumber.value],
+          [productClass.label, productClass.value],
+          [productSubclass.label, productSubclass.value]
+        ])
+        const $group = { _id: null, options: { $addToSet: '$產品名稱' } }, $project = { _id: 0 }
+        const props = [{ $match }, { $group }, { $project }]
+        if (typeIn) {
+          const $addFields = { matched: { $regexMatch: { input: '$產品名稱', regex: typeIn, options: 'i' } } }
+          props.unshift({ $addFields  })
+          Object.assign($match, { matched: true })
+        }
+        client.db('ERP').collection('materialsInform').aggregate(props).toArray((err1, document) => {
+          try {
+            const options = document.length > 0 ? document[0].options.filter(option => option).slice(0, 5) : []
+            res.send({ options })
+            client.close() 
+          } catch (err1) {
+            res.end()
+            console.error(err1)
+            client.close()
+          }
+        })
+      } catch (err0) {
+        res.end()
+        console.error(err0)
+        client.close()
+      }
+    })
+  })
+
+  app.post('/api/filterModel', function (req, res) {
+    MongoClient.connect('mongodb://127.0.0.1:27017', { useUnifiedTopology: true }, function (err0, client) {
+      try {
+        const { typeIn, item, productClass, productSubclass } = req.body
+        const $addFields = { matched: { $regexMatch: { input: `$${item.label}`, regex: typeIn, options: 'i' } } }
+        const $match = Object.fromEntries ([
+          ['matched', true], [productClass.label, productClass.value], [productSubclass.label, productSubclass.value]
+        ])
+        const $group = { _id: null, options: { $addToSet: `$${item.label}` } }, $project = { _id: 0 }
+        client.db('ERP').collection('materialsInform').aggregate([{$addFields}, { $match }, { $group }, { $project }]).toArray((err1, document) => {
+          try {
+            res.send({ options: document.length > 0 ? document[0].options.slice(0, 5) : [] })
+            client.close()
+          } catch (err1) {
+            res.end()
+            console.error(err1)
+            client.close()
+          }
+        })
+      } catch (err0) {
+        res.end()
+        console.error(err0)
+        client.close()
+      }
+    })
+  })
+
   io.on('connection', (socket) => {
     socket.on('getProductClassByTaxIdNum', (frontendData) => {
-      MongoClient.connect('mongodb://127.0.0.1:12345', { useUnifiedTopology: true }, function (err0, client) {
+      MongoClient.connect('mongodb://127.0.0.1:27017', { useUnifiedTopology: true }, function (err0, client) {
         if (!err0) {
           // client.db('ERP').collection('ProductClassification').aggregate([{ $match: { 統編: frontendData.taxIdNum } }, { $project: { _id: 0, 產品種類: 1 } }]).toArray((err1, document) => {
           client.db('ERP').collection('materialsInform').aggregate([{ $match: { 統編: frontendData.taxIdNum } }, { $project: { _id: 0, 產品種類: 1 } }]).toArray((err1, document) => {
@@ -769,7 +931,7 @@ module.exports = function () {
       })
     })
     socket.on('getFirmNameByProductClass', (frontendData) => {
-      MongoClient.connect('mongodb://127.0.0.1:12345', { useUnifiedTopology: true }, function (err0, client) {
+      MongoClient.connect('mongodb://127.0.0.1:27017', { useUnifiedTopology: true }, function (err0, client) {
         if (!err0) {
           // client.db('ERP').collection('ProductClassification').aggregate([{ $match: { 產品種類: frontendData.productClass } }, { $project: { _id: 0, 產品名稱: 1 } }]).toArray((err1, document) => {
           client.db('ERP').collection('materialsInform').aggregate([{ $match: { 產品種類: frontendData.productClass } }, { $project: { _id: 0, 產品名稱: 1 } }]).toArray((err1, document) => {
@@ -791,7 +953,7 @@ module.exports = function () {
       })
     })
     socket.on('getModelAnd_idByClass', (frontendData) => {
-      MongoClient.connect('mongodb://127.0.0.1:12345', { useUnifiedTopology: true }, function (err0, client) {
+      MongoClient.connect('mongodb://127.0.0.1:27017', { useUnifiedTopology: true }, function (err0, client) {
         if (!err0) {
           client.db('ERP').collection('materialsInform').aggregate([{ $match: { 產品名稱: frontendData.class2 } }, { $project: { 型號: 1 } }]).toArray((err1, document) => {
             if (!err1) {
@@ -813,7 +975,7 @@ module.exports = function () {
       })
     })
     socket.on('getPricesByMaterialsInform_id', (frontendData) => {
-      MongoClient.connect('mongodb://127.0.0.1:12345', { useUnifiedTopology: true }, function (err0, client) {
+      MongoClient.connect('mongodb://127.0.0.1:27017', { useUnifiedTopology: true }, function (err0, client) {
         if (!err0) {
           const { materialsInform } = frontendData
           client.db('ERP').collection('materialsList').aggregate([{ $match: materialsInform }, { $project: { _id: 0, 單價: 1 } }]).toArray((err1, document) => {
@@ -833,7 +995,7 @@ module.exports = function () {
       })
     })
     socket.on('update', (frontendData) => {
-      MongoClient.connect('mongodb://127.0.0.1:12345', { useUnifiedTopology: true }, function (err0, client) {
+      MongoClient.connect('mongodb://127.0.0.1:27017', { useUnifiedTopology: true }, function (err0, client) {
         if (!err0) {
           client.db('ERP').collection('invoiceRecord').aggregate([{ $match: { _id: new mongodb.ObjectID(frontendData.selected._id) } }]).toArray((err2, document) => {
             io.emit('initializeForUpdated', {
@@ -849,7 +1011,7 @@ module.exports = function () {
       })
     })
     socket.on('submit', (frontendData) => {
-      MongoClient.connect('mongodb://127.0.0.1:12345', { useUnifiedTopology: true }, function (err0, client) {
+      MongoClient.connect('mongodb://127.0.0.1:27017', { useUnifiedTopology: true }, function (err0, client) {
         if (!err0) {
           if (frontendData.submitOperation === 'create') {
             (async () => {
@@ -872,7 +1034,7 @@ module.exports = function () {
       })
     })
     socket.on('delete', (frontendData) => {
-      MongoClient.connect('mongodb://127.0.0.1:12345', { useUnifiedTopology: true }, function (err0, client) {
+      MongoClient.connect('mongodb://127.0.0.1:27017', { useUnifiedTopology: true }, function (err0, client) {
         if (!err0) {
           (async () => {
             await client.db('ERP').collection('invoiceRecord').deleteOne({ _id: new mongodb.ObjectID(frontendData.selected[0]._id) })

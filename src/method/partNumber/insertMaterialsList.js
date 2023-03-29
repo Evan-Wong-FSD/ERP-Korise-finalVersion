@@ -11,7 +11,7 @@ const materialsLists = []
   await workbook.xlsx.readFile(filename)
   createMaterialsList()
   // console.log(materialsLists)
-  MongoClient.connect('mongodb://127.0.0.1:12345', { useUnifiedTopology: true }, async function (err0, client) {
+  MongoClient.connect('mongodb://127.0.0.1:27017', { useUnifiedTopology: true }, async function (err0, client) {
     try {
       await client.db('ERP').collection('materialsList').deleteMany({})
       await client.db('ERP').collection('materialsList').insertMany(materialsLists)

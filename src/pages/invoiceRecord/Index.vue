@@ -29,7 +29,6 @@
 </template>
 
 <script>
-import { mapMutations } from 'vuex'
 import PurchaseRecord from 'src/pages/invoiceRecord/purchaseRecord/Index.vue'
 import SalesRecord from 'src/pages/invoiceRecord/salesRecord/Index.vue'
 export default {
@@ -42,14 +41,6 @@ export default {
       menuValue: '進項',
       menuOption: ['進項', '銷項']
     }
-  },
-  methods: {
-    ...mapMutations('invoiceRecord', {
-      destroyState: 'destroyState'
-    })
-  },
-  destroyed () {
-    this.destroyState()
   }
 }
 </script>

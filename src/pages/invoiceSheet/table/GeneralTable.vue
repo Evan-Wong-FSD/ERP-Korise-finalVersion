@@ -8,6 +8,7 @@
       row-key="invoiceNumber"
       selection="multiple"
       :selected.sync="selected"
+      :pagination.sync="pagination"
       @update:selected="(newSelected) => {updateGeneralDataItemSelected(newSelected)}"
     >
       <template v-slot:top-left>
@@ -25,18 +26,15 @@
             <q-td v-text="'合計'" v-if="index === 0" :key="index" />
 
             <q-td v-else-if="elem.name === 'salesFigures'" :key="index">
-              <!-- ${{numberWithCommas(totalSalesFigures)}} -->
-              ${{numberWithCommas(totalAmount.salesFigures)}}
+              ${{numberWithCommas(totalSalesFigures)}}
             </q-td>
 
             <q-td v-else-if="elem.name === 'tax'" :key="index">
-              <!-- ${{numberWithCommas(totalTax)}} -->
-              ${{numberWithCommas(totalAmount.tax)}}
+              ${{numberWithCommas(totalTax)}}
             </q-td>
 
             <q-td v-else-if="elem.name === 'summary'" :key="index">
-              <!-- ${{numberWithCommas(totalSummary)}} -->
-              ${{numberWithCommas(totalAmount.summary)}}
+              ${{numberWithCommas(totalSummary)}}
             </q-td>
 
             <q-td v-else :key="index" />
@@ -76,40 +74,41 @@ export default {
         { name: 'remark', label: '備註', field: 'remark', align: 'center' }
       ],
       numberWithCommas,
-      totalAmount: { salesFigures: 0, tax: 0, summary: 0 }
+      pagination: {}
     }
   },
   computed: {
-    ...mapState('invoiceSheet', ['generalTableData', 'generalDataItemSelected'])
-    // totalSalesFigures () {
-    //   return this.$refs.table
-    //     ? this.$refs.table.computedRows.reduce((total, data) => {
-    //       return total + Math.round(Number(data.salesFigures))
-    //     }, 0)
-    //     : 0
-    // },
-    // totalTax () {
-    //   return this.$refs.table
-    //     ? this.$refs.table.computedRows.reduce((total, data) => {
-    //       return total + Math.round(Number(data.tax))
-    //     }, 0)
-    //     : 0
-    // },
-    // totalSummary () {
-    //   return this.$refs.table
-    //     ? this.$refs.table.computedRows.reduce((total, data) => {
-    //       return total + Math.round(Number(data.summary))
-    //     }, 0)
-    //     : 0
-    // }
+    ...mapState('invoiceSheet', ['generalTableData', 'generalDataItemSelected']),
+    totalSalesFigures () {
+      return this.$refs.table
+        ? this.$refs.table.computedRows.reduce((total, data) => {
+          return total + Math.round(Number(data.salesFigures))
+        }, 0)
+        : this.generalTableData.slice(0, this.pagination.rowsPerPage).reduce((total, data) => {
+          return total + Math.round(Number(data.salesFigures))
+        }, 0)
+    },
+    totalTax () {
+      return this.$refs.table
+        ? this.$refs.table.computedRows.reduce((total, data) => {
+          return total + Math.round(Number(data.tax))
+        }, 0)
+        : this.generalTableData.slice(0, this.pagination.rowsPerPage).reduce((total, data) => {
+          return total + Math.round(Number(data.tax))
+        }, 0)
+    },
+    totalSummary () {
+      return this.$refs.table
+        ? this.$refs.table.computedRows.reduce((total, data) => {
+          return total + Math.round(Number(data.summary))
+        }, 0)
+        : this.generalTableData.slice(0, this.pagination.rowsPerPage).reduce((total, data) => {
+          return total + Math.round(Number(data.summary))
+        }, 0)
+    }
   },
   mounted () {
     this.synchronizeSelected()
-    console.log('this.$refs.table')
-    console.log(this.$refs.table)
-    this.computedTotal('salesFigures')
-    this.computedTotal('tax')
-    this.computedTotal('summary')
   },
   methods: {
     ...mapMutations('invoiceSheet', {
@@ -125,13 +124,6 @@ export default {
     },
     synchronizeSelected () {
       this.selected = this.generalDataItemSelected
-    },
-    computedTotal (item) {
-      // this.$nextTick(() => {
-      this.$set(this.totalAmount, item, this.$refs.table.computedRows.reduce((total, data) => {
-        return total + Math.round(Number(data[item]))
-      }, 0))
-      // })
     }
   }
 }

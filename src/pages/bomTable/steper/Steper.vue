@@ -68,7 +68,7 @@
         </q-dialog>
       </q-stepper-navigation>
 
-      <Splitter :productClass="item" />
+      <Splitter :currentCostItem="item" />
     </q-step>
   </q-stepper>
 </template>

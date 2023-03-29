@@ -1,12 +1,12 @@
 <template>
   <q-form ref="form" class="q-pr-lg q-gutter-y-md" @submit="onSubmit" @reset="onReset">
-    <div class="ProductInformInputBox" v-for="(item, index) of inputBox" :key="index">
+    <div class="ProductInformInputBox" v-for="(item) of inputBox" :key="item.id">
       <q-input
         outlined
         clearable
         :label="item.label"
         v-if="item.label === '單位' || item.label === '備註'"
-        v-model="inputBox[index].value"
+        v-model="item.value"
         :rules="item.label === '備註' ? [ val => [] ] : [ val => val && val !== null || `${item.label}不能為空值`]"
       />
 
@@ -16,12 +16,13 @@
         :label="item.label"
         type='number'
         hide-hint
-        :hint="productClass !== '保養' ? `剩餘${remainder}` : ''"
+        :hint="currentCostItem !== '其他收入' ? `剩餘${remainder}` : ''"
         v-else-if="item.label === '數量'"
-        v-model="inputBox[index].value"
+        v-model="item.value"
+        @focus="getRemainderOfProduct"
         :rules="[
           val => val && val !== null || `${item.label}不能為空值`,
-          productClass !== '保養'
+          currentCostItem !== '保養'
             ? val => val > 0 && val <= remainder || '超出剩餘數量'
             : []
         ]"
@@ -36,12 +37,38 @@
         input-debounce="500"
         :label="item.label"
         :options="options"
-        v-model="inputBox[index].value"
-        :readonly="Boolean(inputBox[index].value)"
+        v-model="item.value"
         v-else-if="item.label === '型號'"
-        :rules="[ val => val && val !== null|| `${item.label}不能為空值`]"
+        :rules="currentCostItem === '管材' ? [val => val && val !== null || `${item.label}不能為空值`] : [ val => []]"
         @filter="(value, update, abort) => { fetchAndFilter(item.label, value.trim(), update, abort) }"
-        @input="getRemainderOfProduct"
+      >
+        <template v-slot:no-option>
+          <q-item>
+            <q-item-section class="text-grey">
+              無結果
+            </q-item-section>
+          </q-item>
+        </template>
+      </q-select>
+
+      <q-select
+        hide-selected
+        fill-input
+        outlined
+        clearable
+        use-input
+        input-debounce="500"
+        :ref="item.name"
+        :label="item.label"
+        :options="options"
+        v-model="item.value"
+        v-else-if="item.label === '單價'"
+        :rules="[
+          val => !isNaN(val) || '請輸入純數字',
+          val => val && val !== null|| `${item.label}不能為空值`
+        ]"
+        @filter="(value, update, abort) => { fetchAndFilter(item.label, value.trim(), update, abort) }"
+        @new-value="newUnitCost"
       >
         <template v-slot:no-option>
           <q-item>
@@ -61,9 +88,8 @@
         input-debounce="500"
         :label="item.label"
         :options="options"
-        v-model="inputBox[index].value"
-        :readonly="Boolean(inputBox[index].value)"
-        v-else
+        v-model="item.value"
+        v-else-if="item.label === '產品名稱'"
         :rules="[ val => val && val !== null|| `${item.label}不能為空值`]"
         @filter="(value, update, abort) => { fetchAndFilter(item.label, value.trim(), update, abort) }"
       >
@@ -83,18 +109,30 @@
 
 <script>
 import { mapState, mapMutations } from 'vuex'
-import { ProductClassificationAPI, invoiceSheetAPI } from 'boot/axios'
+import { bomSheet } from 'boot/axios'
 export default {
   data () {
     return {
       options: [],
       inputBox: [],
-      productClass: this.$attrs.productClass,
+      currentCostItem: this.$attrs.currentCostItem,
       remainder: 0
     }
   },
   computed: {
-    ...mapState('bomTable', ['productPrice', 'basicInform'])
+    ...mapState('bomTable', ['productPrice', 'basicInform']),
+    productName () {
+      return this.inputBox.find(elem => elem.name === 'productName')
+    },
+    model () {
+      return this.inputBox.find(elem => elem.name === 'model')
+    },
+    amount () {
+      return this.inputBox.find(elem => elem.name === 'amount')
+    },
+    unitCost () {
+      return this.inputBox.find(elem => elem.name === 'unitCost')
+    }
   },
   mounted () {
     this.initInputBox()
@@ -113,56 +151,53 @@ export default {
     onSubmit () {
       this.$refs.form.validate().then(success => {
         if (success) {
-          const { productClass, inputBox } = this
           this.inputBox.forEach(elem => {
-            elem.value = elem.value.trim()
+            if (elem.value) elem.value = elem.value.trim()
           })
-          inputBox.splice(5, 0, { label: '複價', value: String(inputBox[2].value * inputBox[4].value) }) // 數量 * 單價
-          this.insertProductInformOnTable({ productClass, inputBox })
+          this.inputBox.splice(5, 0, { label: '複價', value: String(this.amount.value * this.unitCost.value) }) // 數量 * 單價
+          this.insertProductInformOnTable({ currentCostItem: this.currentCostItem, inputBox: this.inputBox })
           this.$refs.form.reset()
         }
       })
     },
     onReset () {
       this.resetProductPrice()
-      this.inputBox = []
+      this.inputBox.splice(0, this.inputBox.length)
       this.initInputBox()
       this.remainder = 0
     },
     resetProductPriceOnGlobalEventBus () {
       this.$root.$on('resetProductPriceInputbox', () => {
-        this.$refs.form.reset()
+        if (this.$refs.form) this.$refs.form.reset()
       })
     },
     fetchAndFilter (label, inputValue, update, abort) {
-      const productName = this.inputBox[0].value
-      if ((label === '產品名稱' && !inputValue) || (label !== '產品名稱' && !productName)) {
-        abort()
-      } else {
-        const _this = this
-        const { path, props } = api(_this)
-        updateOptions(_this, path, props)
-      }
+      const _this = this
+      const { path, props } = api(_this)
+      updateOptions(_this, path, props)
       function updateOptions (_this, path, props) {
-        ProductClassificationAPI.post(path, props).then((res) => {
+        bomSheet.post(path, props).then((res) => {
           update(() => {
-            const { arrResult } = res.data
-            _this.options = arrResult
+            _this.options = res.data.arrResult
           })
         })
       }
       function api (_this) {
-        if (label === '產品名稱') return { path: '/api/getProductNameOptions', props: { productClass: { value: _this.productClass }, inputValue } }
-        if (label === '型號') return { path: '/api/getModelOptions', props: { productName } }
-        if (label === '單價') return { path: '/api/getPricesOptions', props: { productName, model: _this.inputBox[1].value } }
+        if (label === '產品名稱') return { path: '/api/getProductNameOptions', props: { productClass: _this.currentCostItem, inputValue, label } }
+        if (label === '型號') return { path: '/api/getModelOptions', props: { productName: _this.productName.value } }
+        if (label === '單價') return { path: '/api/getPricesOptions', props: { productName: _this.productName.value, model: _this.model.value } }
       }
     },
-    getRemainderOfProduct (model) {
-      if (this.productClass !== '保養') {
-        invoiceSheetAPI.post('/api/getRemainderOfProduct', { taxIdNumber: this.basicInform[3], model }).then(res => {
-          this.remainder = res.data.remainder || 0
+    getRemainderOfProduct () {
+      if (this.currentCostItem !== '保養') {
+        bomSheet.post('/api/getRemainderOfProduct', { productName: this.productName, model: this.model }).then(res => {
+          this.remainder = res.data.remainder
         })
       }
+    },
+    newUnitCost (inputValue, doneFn) {
+      // if (isNaN(inputValue)) return
+      doneFn(String(inputValue), 'add-unique')
     }
   }
 }

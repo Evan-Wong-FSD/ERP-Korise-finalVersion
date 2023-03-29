@@ -1,3 +1,5 @@
+import { v4 as uuidv4 } from 'uuid'
+
 export default function () {
   return {
     basicInform: [
@@ -11,20 +13,20 @@ export default function () {
       { name: 'clientFaxNumber', label: '客戶傳真', value: '' }
     ],
     productPrice: [
-      { label: '產品名稱', value: '' },
-      { label: '型號', value: '' },
-      { label: '數量', value: '' },
-      { label: '單位', value: '' },
-      { label: '單價', value: '' },
-      { label: '備註', value: '' }
+      { id: uuidv4(), name: 'productName', label: '產品名稱', value: '' },
+      { id: uuidv4(), name: 'model', label: '型號', value: '' },
+      { id: uuidv4(), name: 'amount', label: '數量', value: '' },
+      { id: uuidv4(), name: 'unit', label: '單位', value: '' },
+      { id: uuidv4(), name: 'unitCost', label: '單價', value: '' },
+      { id: uuidv4(), name: 'remark', label: '備註', value: '' }
     ],
     cost: [
-      { label: '費用名稱', value: '' },
-      { label: '規格', value: '' },
-      { label: '數量', value: '' },
-      { label: '單位', value: '' },
-      { label: '單價', value: '' },
-      { label: '備註', value: '' }
+      { id: uuidv4(), name: 'costName', label: '費用名稱', value: '' },
+      { id: uuidv4(), name: 'model', label: '規格', value: '' },
+      { id: uuidv4(), name: 'amount', label: '數量', value: '' },
+      { id: uuidv4(), name: 'unit', label: '單位', value: '' },
+      { id: uuidv4(), name: 'unitCost', label: '單價', value: '' },
+      { id: uuidv4(), name: 'remark', label: '備註', value: '' }
     ],
     tableData: [
       { column0: '瑋安企業有限公司' },

@@ -19,12 +19,14 @@
                   hide-bottom-space
                   type="number"
                   hide-hint
-                  :hint="salesInvoiceRecords[props.rowIndex].產品種類 !== '保養' ? `剩餘${remainder}` : ''"
                   :rules="[ val => Boolean(val) || '數量不能為空值', val => val > 0 || '數量必須大於0' ]"
                   class="input-amount"
                   v-model="data[props.rowIndex].amount"
                   @input="(value) => { inputAmount(value, props.rowIndex) }"
                   @focus="getRemainderOfProduct(props.rowIndex)"
+                  :hint="(salesInvoiceRecords[props.rowIndex].產品種類 !== '其他費用' && salesInvoiceRecords[props.rowIndex].產品種類 !== '其他收入')
+                    ? `剩餘${remainder}`
+                    : ''"
                 />
               </q-form>
             </q-td>
@@ -131,7 +133,8 @@ export default {
     initDataOfQuotation () {
       let rawDataOfQuotation = this.rawDataOfQuotation
       if (this.rawDataOfQuotation.length > 0) {
-        rawDataOfQuotation = rawDataOfQuotation.slice(8, rawDataOfQuotation.length - 3)
+        // rawDataOfQuotation = rawDataOfQuotation.slice(8, rawDataOfQuotation.length - 3)
+        rawDataOfQuotation = rawDataOfQuotation.slice(8, rawDataOfQuotation.length - 1)
         rawDataOfQuotation = rawDataOfQuotation.filter(elem => Object.keys(elem).length > 2)
         rawDataOfQuotation = rawDataOfQuotation.reduce((total, elem) => {
           return total.concat(new Data(elem))
@@ -155,8 +158,7 @@ export default {
       })
       invoiceSheetAPI.post('/api/insertSalesInvoiceRecords', {
         salesInvoiceRecords,
-        invoiceNumber: this.inputsOnBaseOfSalesRecord.invoiceNumber,
-        quotationData: data
+        invoiceNumber: this.inputsOnBaseOfSalesRecord.invoiceNumber
       }).then(() => {
         this.resetStep()
         this.resetQuotationRawData()
@@ -174,9 +176,12 @@ export default {
     },
     getRemainderOfProduct (rowIndex) {
       const salesInvoiceRecord = this.salesInvoiceRecords[rowIndex]
-      const productClass = salesInvoiceRecord.產品種類, model = salesInvoiceRecord.型號, taxIdNumber = salesInvoiceRecord.統編
-      if (productClass !== '保養') {
-        invoiceSheetAPI.post('/api/getRemainderOfProduct', { taxIdNumber, model }).then(res => {
+      const productClass = salesInvoiceRecord.產品種類
+      if (productClass !== '其他費用' && productClass !== '其他收入') {
+        invoiceSheetAPI.post('/api/getRemainderOfProduct', {
+          productName: { label: '產品名稱', value: salesInvoiceRecord.產品名稱 },
+          model: { label: '型號', value: salesInvoiceRecord.型號 }
+        }).then(res => {
           this.remainder = res.data.remainder || 0
         })
       }

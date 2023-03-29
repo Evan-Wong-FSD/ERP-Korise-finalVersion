@@ -178,7 +178,7 @@ export default {
       })
     },
     saveDate (proxyDate, index) {
-      const timeStampDiffBetweenNowAndROC = 60305414760000
+      const timeStampDiffBetweenNowAndROC = 60305326602000
       const formattedDate = proxyDate.replace(/\//g, '-')
       this.inputBox[index].value = date.formatDate(Date.parse(formattedDate) - timeStampDiffBetweenNowAndROC, 'YYYY/MM/DD')
     }

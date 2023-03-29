@@ -5,7 +5,7 @@
       dense
       options-dense
       outlined
-      :readonly="bomMode === 'view'"
+      :readonly="bomMode === 'view' || onReadonly"
       :options="options.map(elem => elem.sheetLabel)"
       label="表單名稱"
       class="select-sheetName"
@@ -27,7 +27,8 @@ export default {
       options: [
         { sheetName: 'bomSheet', sheetLabel: '物  料  清  單' },
         { sheetName: 'quotation', sheetLabel: '報  價  單' }
-      ]
+      ],
+      onReadonly: false
     }
   },
   computed: {
@@ -77,6 +78,7 @@ export default {
         link.click()
         link.remove()
         window.URL.revokeObjectURL(downloadUrl)
+        this.onReadonly = true
       })
 
       function base64ToArrayBuffer (base64) {

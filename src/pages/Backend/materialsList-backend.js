@@ -3,9 +3,9 @@ module.exports = function () {
   const express = require('express')
   const app = express()
   // const http = require('http').Server(app)
+  // const port = 3009
   const http = require('http')
   const server = http.createServer(app)
-  // const port = 3009
   app.set('port', process.env.PORT || 3009)
   const mongodb = require('mongodb')
   const ObjectID = mongodb.ObjectID
@@ -27,7 +27,7 @@ module.exports = function () {
   const getParam = (href, strKey) => href.searchParams.get(strKey)
 
   app.get('/api/requestMaterialsList', function (req, res) {
-    MongoClient.connect('mongodb://127.0.0.1:12345', { useUnifiedTopology: true }, function (err0, client) {
+    MongoClient.connect('mongodb://127.0.0.1:27017', { useUnifiedTopology: true }, function (err0, client) {
       try {
         client.db('ERP').collection('materialsInform').find({}).toArray((err1, document) => {
           try {
@@ -48,7 +48,7 @@ module.exports = function () {
   })
 
   app.get('/api/requestMaterialsListData', function (req, res) {
-    MongoClient.connect('mongodb://127.0.0.1:12345', { useUnifiedTopology: true }, function (err0, client) {
+    MongoClient.connect('mongodb://127.0.0.1:27017', { useUnifiedTopology: true }, function (err0, client) {
       try {
         const href = new URL(`http://${req.headers.host}${req.url}`)
         const 產品種類 = getParam(href, '產品種類'), 產品材質 = getParam(href, '產品材質'), 管材口徑 = getParam(href, '管材口徑'), 型號 = getParam(href, '型號')
@@ -75,11 +75,11 @@ module.exports = function () {
   })
 
   app.get('/api/filterSelects', function (req, res) {
-    MongoClient.connect('mongodb://127.0.0.1:12345', { useUnifiedTopology: true }, async (err0, client) => {
+    MongoClient.connect('mongodb://127.0.0.1:27017', { useUnifiedTopology: true }, async (err0, client) => {
       try {
         const href = new URL(`http://${req.headers.host}${req.url}`)
         const label = getParam(href, 'label'), typeIn = getParam(href, 'typeIn')
-        const $addFields = { matched: { $regexMatch: { input: `$firmInform.${label}`, regex: typeIn, options: 'i' } } }
+        const $addFields = { matched: { $regexMatch: { input: `$firmInform.${label}`, regex: typeIn, options: "i" } } }
         const $match = { matched: true }, $project = { _id: 0, matched: 0, contactPersonInform: 0 }
         const $group = Object.assign({ _id: null }, Object.fromEntries([[label, { $addToSet: `$firmInform.${label}` }]]))
         client.db('ERP').collection('firmInform').aggregate([{ $addFields }, { $match }, { $project }, { $group }]).toArray((err1, document) => {
@@ -101,31 +101,31 @@ module.exports = function () {
   })
 
   app.post('/api/autoComplete', function (req, res) {
-    MongoClient.connect('mongodb://127.0.0.1:12345', { useUnifiedTopology: true }, (err0, client) => {
-      try {
-        const { itemNeededToComplete, itemCompleted } = req.body
-        const $match = Object.fromEntries([[`firmInform.${itemCompleted.label}`, itemCompleted.input]])
-        const $project = Object.assign({ _id: 0 }, Object.fromEntries([[`firmInform.${itemNeededToComplete.label}`, 1]]))
-        client.db('ERP').collection('firmInform').aggregate([{ $match }, { $project }, { $limit: 1 }]).toArray((err1, document) => {
-          try {
-            res.send({ inputAutoCompleted: document.length > 0 ? document[0].firmInform[itemNeededToComplete.label] : null })
-            client.close()
-          } catch (error) {
-            res.end()
-            client.close()
-            console.error(err1)
-          }
-        })
-      } catch (err0) {
-        res.end()
-        client.close()
-        console.error(err0)
-      }
+    MongoClient.connect('mongodb://127.0.0.1:27017', { useUnifiedTopology: true }, (err0, client) => {
+    try {
+      const { itemNeededToComplete, itemCompleted } = req.body
+      const $match = Object.fromEntries([[`firmInform.${itemCompleted.label}`, itemCompleted.input]])
+      const $project = Object.assign({ _id: 0 }, Object.fromEntries([[`firmInform.${itemNeededToComplete.label}`, 1]]))
+      client.db('ERP').collection('firmInform').aggregate([{ $match }, { $project }, { $limit: 1 }]).toArray((err1, document) => {
+        try {
+          res.send({ inputAutoCompleted: document.length > 0 ? document[0].firmInform[itemNeededToComplete.label] : null })
+          client.close()
+        } catch (error) {
+          res.end()
+          client.close()
+          console.error(err1)
+        }
+      })
+    } catch (err0) {
+      res.end()
+      client.close()
+      console.error(err0)
+    }
     })
   })
 
   app.post('/api/createMaterialsList', function (req, res) {
-    MongoClient.connect('mongodb://127.0.0.1:12345', { useUnifiedTopology: true }, async (err0, client) => {
+    MongoClient.connect('mongodb://127.0.0.1:27017', { useUnifiedTopology: true }, async (err0, client) => {
       try {
         const { inputboxs, materialSelectedDetail } = req.body
         const field = Object.values(inputboxs).reduce((total, elem) => {
@@ -137,7 +137,7 @@ module.exports = function () {
               try {
                 await client.db('ERP').collection('materialsList').insertOne(field)
                 res.send({ type: 'positive', message: '新增成功', field })
-                client.close()
+                client.close
               } catch (error) {
                 res.send({ type: 'negative', message: '新增失敗。' })
                 client.close()
@@ -162,7 +162,7 @@ module.exports = function () {
   })
 
   app.post('/api/updateMaterialsList', function (req, res) {
-    MongoClient.connect('mongodb://127.0.0.1:12345', { useUnifiedTopology: true }, async (err0, client) => {
+    MongoClient.connect('mongodb://127.0.0.1:27017', { useUnifiedTopology: true }, async (err0, client) => {
       try {
         const { _id, inputboxs, materialSelectedDetail } = req.body
         const field = Object.values(inputboxs).reduce((total, elem) => {
@@ -186,7 +186,7 @@ module.exports = function () {
   })
 
   app.get('/api/deleteMaterialListSelected', function (req, res) {
-    MongoClient.connect('mongodb://127.0.0.1:12345', { useUnifiedTopology: true }, async (err0, client) => {
+    MongoClient.connect('mongodb://127.0.0.1:27017', { useUnifiedTopology: true }, async (err0, client) => {
       try {
         const href = new URL(`http://${req.headers.host}${req.url}`)
         const id = getParam(href, 'id')

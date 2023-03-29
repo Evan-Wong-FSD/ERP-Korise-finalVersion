@@ -18,7 +18,7 @@ const resetInputsOnBaseOfPurchseRecord = (state) => {
     taxIdNumber: { label: '統編', value: '', options: [] },
     firm: { label: '公司名稱', value: '', options: [] },
     year: { label: '期年', value: '' },
-    periodOfMonth: { label: '期數', value: '', options: ['1-2月', '3-4月', '5-6月', '7-8月', '9-10月', '11-12月'] }
+    periodOfMonth: { label: '期數', value: '', options: ['1-2', '3-4', '5-6', '7-8', '9-10', '11-12'] }
   }
 }
 
@@ -28,6 +28,8 @@ const updateInputsOnDetailOfPurchseRecord = (state, value) => {
 
 const resetInputsOnDetailOfPurchseRecord = (state) => {
   state.inputsOnDetailOfPurchseRecord = {
+    productClass: { label: '產品種類', value: '', options: [] },
+    productSubclass: { label: '產品材質', value: '', options: [] },
     productName: { label: '產品名稱', value: '', options: [] },
     model: { label: '型號', value: '', options: [] },
     amount: { label: '數量', value: '' },
@@ -37,9 +39,9 @@ const resetInputsOnDetailOfPurchseRecord = (state) => {
   }
 }
 
-const updateProductNameOptions = (state, value) => {
-  state.inputsOnDetailOfPurchseRecord.productName.options = value
-}
+// const updateProductNameOptions = (state, value) => {
+//   state.inputsOnDetailOfPurchseRecord.productName.options = value
+// }
 
 const updateSerialNumber = (state, value) => {
   state.serialNumber = value
@@ -67,7 +69,7 @@ const resetInputsOnBaseOfSalesRecord = (state) => {
     invoiceClass: { label: '發票種類', value: '', options: ['三聯式統一發票', '二聯式統一發票', '特種統一發票', '收銀機統一發票', '電子發票'] },
     invoiceNumber: { label: '發票號', value: '' },
     year: { label: '期年', value: '' },
-    periodOfMonth: { label: '期數', value: '', options: ['1-2月', '3-4月', '5-6月', '7-8月', '9-10月', '11-12月'] }
+    periodOfMonth: { label: '期數', value: '', options: ['1-2', '3-4', '5-6', '7-8', '9-10', '11-12'] }
   }
 }
 
@@ -75,24 +77,14 @@ const insertSalesInvoiceRecords = (state, value) => {
   state.salesInvoiceRecords = value
 }
 
-const initState = (state) => {
-  resetStep(state)
-  resetInputsOnBaseOfPurchseRecord(state)
-  resetInputsOnDetailOfPurchseRecord(state)
-  resetSerialNumberValue(state)
-  resetQuotationRawData(state)
-  resetInputsOnBaseOfSalesRecord(state)
-}
-
-const destroyState = (state) => {
-  for (const key in state) {
-    if (Array.isArray(state[key])) {
-      state[key].length = 0
-    } else if (typeof state[key] === 'object') {
-      state[key] = null
-    }
-  }
-}
+// const initState = (state) => {
+//   resetStep(state)
+//   resetInputsOnBaseOfPurchseRecord(state)
+//   resetInputsOnDetailOfPurchseRecord(state)
+//   resetSerialNumberValue(state)
+//   resetQuotationRawData(state)
+//   resetInputsOnBaseOfSalesRecord(state)
+// }
 
 export {
   updateStep,
@@ -101,14 +93,13 @@ export {
   resetInputsOnBaseOfPurchseRecord,
   updateInputsOnDetailOfPurchseRecord,
   resetInputsOnDetailOfPurchseRecord,
-  updateProductNameOptions,
+  // updateProductNameOptions,
   updateSerialNumber,
   resetSerialNumberValue,
   updateQuotationRawData,
   resetQuotationRawData,
   updateInputsOnBaseOfSalesRecord,
   resetInputsOnBaseOfSalesRecord,
-  insertSalesInvoiceRecords,
-  initState,
-  destroyState
+  insertSalesInvoiceRecords
+  // initState,
 }

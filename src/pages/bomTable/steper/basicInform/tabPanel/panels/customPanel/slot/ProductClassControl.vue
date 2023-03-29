@@ -47,7 +47,7 @@
 
 <script>
 import { mapState, mapMutations } from 'vuex'
-import { ProductClassificationAPI } from 'boot/axios'
+import { bomSheet } from 'boot/axios'
 export default {
   data () {
     return {
@@ -125,7 +125,7 @@ export default {
       if (value.length < 2) {
         abort()
       } else {
-        ProductClassificationAPI.post('/api/getProductClassoptions', { productClassTypeIn: value }).then(res => {
+        bomSheet.post('/api/getProductClassOptions', { productClassTypeIn: value }).then(res => {
           const { productClassoptions } = res.data
           if (productClassoptions) update(() => { this.options = productClassoptions })
         })
@@ -133,8 +133,10 @@ export default {
     },
     resetProductClassOnGlobalEventBus () {
       this.$root.$on('resetProductClassInCustomPanel', () => {
-        this.options.length = 0
-        this.$refs.productClassInput.reset()
+        if (this.$refs.productClassInput) {
+          this.options.splice(0, this.options.length)
+          this.$refs.productClassInput.reset()
+        }
       })
     }
   }

@@ -63,6 +63,10 @@ export default {
       this.$root.$emit('resetCustomDate')
       await updateAccountingPeriod({ yearOfROC, months })
       this.btnDropdown = false
+      console.log('this.selectedPeriodName')
+      console.log(this.selectedPeriodName)
+      console.log('this.searchItem')
+      console.log(this.searchItem)
       invoiceSheetAPI.post('/api/readInvoiceRecord', {
         selectedPeriodName: this.selectedPeriodName,
         searchItem: this.searchItem

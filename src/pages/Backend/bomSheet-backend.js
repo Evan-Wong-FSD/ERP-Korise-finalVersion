@@ -1,14 +1,12 @@
-// import { numberWithCommas } from '../../method/numberWithCommas.js'
-
 // export function bomSheetBackend () {
 module.exports = function () {
   const express = require('express')
   const app = express()
   // const http = require('http').Server(app)
+  // const port = 3006
   const http = require('http')
   const server = http.createServer(app)
-  // const port = 3002
-  app.set('port', process.env.PORT || 3002)
+  app.set('port', process.env.PORT || 3006)
   const ExcelJS = require('exceljs')
   const mongodb = require('mongodb')
   const ObjectID = mongodb.ObjectID
@@ -36,7 +34,7 @@ module.exports = function () {
   })
 
   app.post('/api/deleteFrequentlyUsedProductClass', function (req, res) {
-    MongoClient.connect('mongodb://127.0.0.1:12345', { useUnifiedTopology: true }, async function (err0, client) {
+    MongoClient.connect('mongodb://127.0.0.1:27017', { useUnifiedTopology: true }, async function (err0, client) {
       if (err0) {
         console.log(err0)
         client.close()
@@ -49,7 +47,7 @@ module.exports = function () {
   })
 
   app.post('/api/frequentlyUsedProductClassLabel', function (req, res) {
-    MongoClient.connect('mongodb://127.0.0.1:12345', { useUnifiedTopology: true }, function (err0, client) {
+    MongoClient.connect('mongodb://127.0.0.1:27017', { useUnifiedTopology: true }, function (err0, client) {
       if (err0) {
         console.log(err0)
         client.close()
@@ -74,7 +72,7 @@ module.exports = function () {
   })
 
   app.post('/api/productClassData', function (req, res) {
-    MongoClient.connect('mongodb://127.0.0.1:12345', { useUnifiedTopology: true }, function (err0, client) {
+    MongoClient.connect('mongodb://127.0.0.1:27017', { useUnifiedTopology: true }, function (err0, client) {
       if (err0) {
         console.log(err0)
         client.close()
@@ -95,7 +93,7 @@ module.exports = function () {
   })
 
   app.post('/api/newFrequentlyUsedProductClass', function (req, res) {
-    MongoClient.connect('mongodb://127.0.0.1:12345', { useUnifiedTopology: true }, async function (err0, client) {
+    MongoClient.connect('mongodb://127.0.0.1:27017', { useUnifiedTopology: true }, async function (err0, client) {
       if (err0) {
         console.log('Error => ', err0)
         client.close()
@@ -111,24 +109,26 @@ module.exports = function () {
           client.db('ERP').collection('frequentlyUsedProductClassList').aggregate([{ $project: { _id: 0, label: 1 } }]).toArray(async (err2, document2) => {
             if (err2) {
               console.log('Error => ', err2)
+              client.close()
             } else if (!document2.some(elem => elem.label === label)) {
               await insertDocument()
             } else {
               res.send({ statusCode: 0 })
+              client.close()
             }
           })
         }
-        client.close()
       })
       const insertDocument = async () => {
         await client.db('ERP').collection('frequentlyUsedProductClassList').insertOne({ label, data })
         res.send({ statusCode: 1 })
+        client.close()
       }
     })
   })
 
   app.post('/api/updateProductClass', function (req, res) {
-    MongoClient.connect('mongodb://127.0.0.1:12345', { useUnifiedTopology: true }, async function (err0, client) {
+    MongoClient.connect('mongodb://127.0.0.1:27017', { useUnifiedTopology: true }, async function (err0, client) {
       try {
         const { frequentlyUsedSelect, productClassData } = req.body
         res.end()
@@ -158,7 +158,7 @@ module.exports = function () {
       }
     }
 
-    MongoClient.connect('mongodb://127.0.0.1:12345', { useUnifiedTopology: true }, function (err0, client) {
+    MongoClient.connect('mongodb://127.0.0.1:27017', { useUnifiedTopology: true }, function (err0, client) {
       if (err0) {
         console.error(err0)
         client.close()
@@ -232,7 +232,7 @@ module.exports = function () {
       }
     }
 
-    MongoClient.connect('mongodb://127.0.0.1:12345', { useUnifiedTopology: true }, function (err0, client) {
+    MongoClient.connect('mongodb://127.0.0.1:27017', { useUnifiedTopology: true }, function (err0, client) {
       if (err0) {
         console.error(err0)
         client.close()
@@ -352,7 +352,7 @@ module.exports = function () {
         if (index === arr.length - 1) cost.push({ ...costPackage })
       })
 
-      MongoClient.connect('mongodb://127.0.0.1:12345', { useUnifiedTopology: true }, function (err0, client) {
+      MongoClient.connect('mongodb://127.0.0.1:27017', { useUnifiedTopology: true }, function (err0, client) {
         if (err0) {
           console.error(err0)
           client.close()
@@ -655,7 +655,7 @@ module.exports = function () {
   })
 
   app.post('/api/obtainBomData', function (req, res) {
-    MongoClient.connect('mongodb://127.0.0.1:12345', { useUnifiedTopology: true }, function (err0, client) {
+    MongoClient.connect('mongodb://127.0.0.1:27017', { useUnifiedTopology: true }, function (err0, client) {
       if (err0) {
         console.error(err0)
         client.close()
@@ -675,7 +675,7 @@ module.exports = function () {
   })
 
   app.post('/api/deleteBomData', function (req, res) {
-    MongoClient.connect('mongodb://127.0.0.1:12345', { useUnifiedTopology: true }, async function (err0, client) {
+    MongoClient.connect('mongodb://127.0.0.1:27017', { useUnifiedTopology: true }, async function (err0, client) {
       if (err0) {
         console.error(err0)
         client.close()
@@ -698,7 +698,170 @@ module.exports = function () {
     })
   })
 
+  app.post('/api/getSerialNumber', function (req, res) {
+    MongoClient.connect('mongodb://127.0.0.1:27017', { useUnifiedTopology: true }, function (err0, client) {
+      if (err0) {
+        console.error(err0)
+        client.close()
+        return
+      }
+      const timeStampFromCurrentDate = Date.parse(`${year}-${month}-${date}T00:00:00`)
+      const objectIdFromDate = Math.floor(timeStampFromCurrentDate / 1000).toString(16) + '0000000000000000'
+      client.db('ERP').collection('bomData').aggregate([{ $project: { _id: 1 } }, { $match: { _id: { $gt: new ObjectID(objectIdFromDate) } } }]).toArray((err1, document) => {
+        if (err1) {
+          console.error(err1)
+          client.close()
+          return
+        }
+        client.close()
+        res.send({ serialNumber: currentDate + formattedString(document.length + 1) })
+      })
+    })
+  })
+
+  app.post('/api/getRemainderOfProduct', function (req, res) {
+    MongoClient.connect('mongodb://127.0.0.1:27017', { useUnifiedTopology: true }, function (err0, client) {
+      try {
+        const { productName, model } = req.body
+        const $match = model.value
+          ? Object.fromEntries([[productName.label, productName.value], [model.label, model.value]])
+          : Object.fromEntries([[productName.label, productName.value]])
+        const $group = { _id: '$進銷項', count: { $sum: 1 } }
+        client.db('ERP').collection('invoiceRecord').aggregate([{ $match }, { $group }]).toArray((err1, document) => {
+          try {
+            const purchase = document.find(elem => elem._id === '進項'), purchaseAmount = purchase ? purchase.count : 0
+            const sales = document.find(elem => elem._id === '銷項'), salesAmount = sales ? sales.count : 0
+            res.send({ remainder: purchaseAmount - salesAmount })
+            client.close()
+          } catch (err1) {
+            res.end()
+            client.close()
+            console.error(err1)
+          }
+        })
+      } catch (err0) {
+        res.end()
+        client.close()
+        console.error(err0)
+      }
+    })
+  })
+
+  app.post('/api/filterOtherCosts', function (req, res) {
+    MongoClient.connect('mongodb://127.0.0.1:27017', { useUnifiedTopology: true }, function (err0, client) {
+      try {
+        // const { productClass, productSubclass, inputItem, typeIn, label } = req.body
+        const { reference, inputItem, typeIn, label } = req.body
+        const $addFields = { matched: { $regexMatch: { input: `$${label}`, regex: typeIn, options: 'i' } } }
+        // const $match = { matched: true, 產品種類: productClass, 產品材質: productSubclass }
+        const $match = Object.assign({ matched: true }, reference)
+        const $group = Object.fromEntries([['_id', null], [inputItem.name, { $addToSet: `$${label}` }]])
+        client.db('ERP').collection('invoiceRecord').aggregate([{ $addFields }, { $match }, { $group }]).toArray((err1, document) => {
+          try {
+            res.send({ options: document.length > 0 ? document[0][inputItem.name].slice(0, 5) : [] })
+            client.close()
+          } catch (err1) {
+            res.end()
+            client.close()
+            console.error(err1)
+          }
+        })
+      } catch (err0) {
+        res.end()
+        client.close()
+        console.error(err0)
+      }
+    })
+  })
+
+  app.post('/api/getProductNameOptions', function (req, res) {
+    MongoClient.connect('mongodb://127.0.0.1:27017', { useUnifiedTopology: true }, function (err0, client) {
+      if (err0) {
+        return
+      }
+      const { productClass, inputValue, label } = req.body
+      // const $match = productClass.value ? { 產品種類: productClass.value } : {}
+      const $addFields = { matched: { $regexMatch: { input: `$${label}`, regex: inputValue, options: 'i' } } }
+      const $match = { 產品種類: productClass, matched: true }, $project = { _id: 0, 產品名稱: 1 }
+      client.db('ERP').collection('materialsInform').aggregate([{ $addFields }, { $match }, { $project }]).toArray((err1, document) => {
+        if (err1) {
+          console.error(err1)
+          client.close()
+          return
+        }
+        res.send({ arrResult: document.length > 0 ? document.map(field => field.產品名稱).slice(0, 5) : [] })
+        client.close()
+      })
+    })
+  })
+
+  app.post('/api/getModelOptions', function (req, res) {
+    MongoClient.connect('mongodb://127.0.0.1:27017', { useUnifiedTopology: true }, function (err0, client) {
+      if (err0) {
+        console.log(err0)
+        return
+      }
+      const { productName } = req.body
+      client.db('ERP').collection('materialsInform').aggregate([{ $match: { 產品名稱: productName } }, { $project: { _id: 0, 型號: 1 } }]).toArray((err1, document) => {
+        if (err1) {
+          console.error(err1)
+          client.close()
+          return
+        }
+        if (document.length) {
+          const arrResult = [...new Set(document.map(elem => elem.型號))].slice(0, 5)
+          res.send({ arrResult })
+        }
+        res.end()
+        client.close()
+      })
+    })
+  })
+
+  app.post('/api/getPricesOptions', function (req, res) {
+    MongoClient.connect('mongodb://127.0.0.1:27017', { useUnifiedTopology: true }, function (err0, client) {
+      if (err0) {
+        console.log(err0)
+        return
+      }
+      const { productName, model } = req.body
+      client.db('ERP').collection('invoiceRecord').aggregate([{ $match: { 進銷項: '銷項', 產品名稱: productName, 型號: model } }, { $project: { _id: 0, 單價: 1 } }]).toArray((err1, document) => {
+        try {
+          res.send({ arrResult: [...new Set(document.map(elem => elem.單價))].slice(0, 5) })
+          client.close()
+        } catch (err1) {
+          res.end()
+          console.error(err1)
+          client.close()
+        }
+      })
+    })
+  })
+
+  app.post('/api/getProductClassOptions', function (req, res) {
+    const { productClassTypeIn } = req.body
+    MongoClient.connect('mongodb://127.0.0.1:27017', { useUnifiedTopology: true }, function (err0, client) {
+      try {
+        const $addFields = { productClassMatched: { $regexMatch: { input: '$產品種類', regex: productClassTypeIn, options: 'i' } } }
+        const $match = { productClassMatched: true }, $project = { _id: 0, 產品種類: 1 }
+        client.db('ERP').collection('ProductClassification').aggregate([{ $addFields }, { $match }, { $project }]).toArray((err1, document) => {
+          try {
+            res.send({ productClassoptions: [...new Set(document.map(elem => elem.產品種類))] })
+          } catch (err1) {
+            res.end()
+            client.close()
+            console.error(err1)
+          }
+        })
+      } catch (err0) {
+        res.end()
+        client.close()
+        console.error(err0)
+      }
+    })
+  })
+
   // http.listen(port, function () {
-  //   console.log('listening on *:3002')
+  //   console.log('listening on *:3006')
   // })
 }

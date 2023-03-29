@@ -20,7 +20,7 @@ const contactPersonInforms = []
     }
   })
   // console.log(document)
-  MongoClient.connect('mongodb://127.0.0.1:12345', { useUnifiedTopology: true }, async function (err0, client) {
+  MongoClient.connect('mongodb://127.0.0.1:27017', { useUnifiedTopology: true }, async function (err0, client) {
     try {
       await client.db('ERP').collection('firmInform').deleteMany({})
       await client.db('ERP').collection('firmInform').insertMany(document)

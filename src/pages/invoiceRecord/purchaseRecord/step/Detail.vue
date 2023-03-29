@@ -2,8 +2,8 @@
   <section>
     <q-form
       ref="form"
-      @reset="onReset(initInputBox)"
       @submit="onSubmit(updateInputsOnDetailOfPurchseRecord, inputBox, resetInputsOnDetailOfPurchseRecord)"
+      @reset="onReset(initInputBox)"
     >
       <section class="row justify-between q-gutter-y-lg">
         <div class="inputBox" v-for="(elem, key) of inputBox " :key="key">
@@ -13,7 +13,7 @@
             v-model="inputBox[key].value"
             :disable="!inputBox.model.value"
             :label="elem.label"
-            v-if="key === 'remark'"
+            v-if="key === 'projectCode' || key === 'remark'"
             :rules="[]"
           />
 
@@ -21,10 +21,11 @@
             outlined
             clearable
             type="number"
-            v-model="inputBox.amount.value"
+            v-model="inputBox[key].value"
             :disable="!inputBox.model.value"
             :label="elem.label"
-            v-else-if="key === 'amount'"
+            :prefix="key === 'unitPrice' ? '$' : ''"
+            v-else-if="key === 'amount' || key === 'unitPrice'"
             :rules="[
               val => val && val.length > 0 || `${elem.label}不能為空`,
               val => val > 0 || `${elem.label}不能小於0`,
@@ -36,24 +37,25 @@
             outlined
             clearable
             use-input
-            v-model="inputBox.productName.value"
-            :readonly="Boolean(inputBox.productName.value)"
+            v-model="inputBox[key].value"
+            :disable="disableInput(key)"
+            :readonly="Boolean(inputBox[key].value)"
             :label="elem.label"
             :options="elem.options"
-            v-else-if="key === 'productName'"
+            v-else-if="key === 'productClass' || key === 'productSubclass' || key === 'productName'"
             :rules="[ val => val && val.length > 0 || `${elem.label}不能為空`]"
-            @filter="(value, update) => { filterProductName(value, update, inputsOnDetailOfPurchseRecord) }"
-            @input="getModelOptions(inputBox.productName, inputsOnBaseOfPurchseRecord, inputsOnDetailOfPurchseRecord)"
+            @filter="(typeIn, update) => { retrieveOptions(typeIn, update, inputBox[key]) }"
           >
             <template v-slot:no-option>
-              <q-item>
-                <q-item-section class="text-grey">
+              <q-item class="bg-grey-1">
+                <q-item-section class="item-section">
                   無結果
                 </q-item-section>
               </q-item>
             </template>
           </q-select>
 
+          <!-- @input="getUnitPriceAndProjectCodeOptions(inputsOnBaseOfPurchseRecord, inputBox)" -->
           <q-select
             outlined
             clearable
@@ -62,12 +64,19 @@
             :readonly="Boolean(inputBox.model.value)"
             :label="elem.label"
             :options="elem.options"
-            v-else-if="key === 'model'"
             :rules="[ val => val && val.length > 0 || `${elem.label}不能為空`]"
-            @input="getUnitPriceAndProjectCodeOptions(inputsOnBaseOfPurchseRecord, inputBox)"
-          />
+            v-else-if="key === 'model'"
+          >
+            <template v-slot:no-option>
+              <modelInputBox
+                :productClass="inputBox.productClass"
+                :productSubclass="inputBox.productSubclass"
+                @inputModel="inputModel"
+              />
+            </template>
+          </q-select>
 
-          <q-select
+          <!-- <q-select
             outlined
             clearable
             v-model="inputBox[key].value"
@@ -78,7 +87,7 @@
             v-else
             @input="(value) => { autoInput(key, value, elem.options, inputBox) }"
             :rules="[ val => val && val.length > 0 || `${elem.label}不能為空`]"
-          />
+          /> -->
         </div>
       </section>
 
@@ -119,7 +128,11 @@
 <script>
 import { mapState, mapMutations } from 'vuex'
 import { invoiceSheetAPI } from 'boot/axios'
+import modelInputBox from 'src/pages/invoiceRecord/purchaseRecord/step/slot/modelInputBox.vue'
 export default {
+  components: {
+    modelInputBox
+  },
   data () {
     return {
       inputBox: {}
@@ -164,10 +177,9 @@ export default {
         })
       })
     },
-    filterProductName (value, update, inputsOnDetailOfPurchseRecord) {
-      update(() => {
-        this.inputBox.productName.options = inputsOnDetailOfPurchseRecord.productName.options.filter(elem => elem.includes(value))
-      })
+    disableInput (key) {
+      if (key === 'productSubclass') return !this.inputBox.productClass.value
+      if (key === 'productName') return !this.inputBox.productSubclass.value
     },
     getModelOptions (productName, inputsOnBaseOfPurchseRecord, inputsOnDetailOfPurchseRecord) {
       if (productName) {
@@ -177,22 +189,44 @@ export default {
         })
       }
     },
-    getUnitPriceAndProjectCodeOptions (inputsOnBaseOfPurchseRecord, inputBox) {
-      const { productName, model, unitPrice, projectCode } = inputBox
-      invoiceSheetAPI.post('/api/getUnitPriceAndProjectCodeOptions', { model, productName, taxIdNumber: inputsOnBaseOfPurchseRecord.taxIdNumber }).then(res => {
-        const { unitPriceOptions, projectCodeOptions } = res.data
-        unitPrice.options = unitPriceOptions
-        projectCode.options = projectCodeOptions
-      })
+    // getUnitPriceAndProjectCodeOptions (inputsOnBaseOfPurchseRecord, inputBox) {
+    //   const { productName, model, unitPrice, projectCode } = inputBox
+    //   invoiceSheetAPI.post('/api/getUnitPriceAndProjectCodeOptions', { model, productName, taxIdNumber: inputsOnBaseOfPurchseRecord.taxIdNumber }).then(res => {
+    //     const { unitPriceOptions, projectCodeOptions } = res.data
+    //     unitPrice.options = unitPriceOptions
+    //     projectCode.options = projectCodeOptions
+    //   })
+    // },
+    // autoInput (name, selected, options, inputBox) {
+    //   const names = ['unitPrice', 'projectCode']
+    //   names.forEach(elem => {
+    //     if (elem !== name) {
+    //       const indexSelectedInOptions = options.indexOf(selected)
+    //       inputBox[elem].value = inputBox[elem].options[indexSelectedInOptions]
+    //     }
+    //   })
+    // },
+    retrieveOptions (typeIn, update, inputElem) {
+      const { taxIdNumber } = this.inputsOnBaseOfPurchseRecord
+      const { productClass, productSubclass } = this.inputBox
+      // if (inputElem.options.length > 0) return update()
+      if (inputElem.label === '產品種類') {
+        fetchOptions('/api/filterProductClass', { typeIn, taxIdNumber })
+      } else if (inputElem.label === '產品材質') {
+        fetchOptions('/api/filterProductSubclass', { typeIn, taxIdNumber, productClass })
+      } else if (inputElem.label === '產品名稱') {
+        fetchOptions('/api/filterProductName', { typeIn, taxIdNumber, productClass, productSubclass })
+      }
+      function fetchOptions (apiPath, data) {
+        invoiceSheetAPI.post(apiPath, data).then(res => {
+          update(() => {
+            inputElem.options = res.data.options
+          })
+        })
+      }
     },
-    autoInput (name, selected, options, inputBox) {
-      const names = ['unitPrice', 'projectCode']
-      names.forEach(elem => {
-        if (elem !== name) {
-          const indexSelectedInOptions = options.indexOf(selected)
-          inputBox[elem].value = inputBox[elem].options[indexSelectedInOptions]
-        }
-      })
+    inputModel (input) {
+      this.inputBox.model.value = input
     }
   }
 }

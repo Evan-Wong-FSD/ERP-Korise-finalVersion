@@ -29,7 +29,7 @@
 </template>
 
 <script>
-import { ProductClassificationAPI } from 'boot/axios'
+import { bomSheet } from 'boot/axios'
 export default {
   props: ['input'],
   data () {
@@ -43,7 +43,7 @@ export default {
       if (value.length < 2) {
         abort()
       } else {
-        ProductClassificationAPI.post('/api/getProductClassoptions', { productClassTypeIn: value }).then(res => {
+        bomSheet.post('/api/getProductClassOptions', { productClassTypeIn: value }).then(res => {
           const { productClassoptions } = res.data
           if (productClassoptions) update(() => { this.options = productClassoptions })
         })

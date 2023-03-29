@@ -6,8 +6,8 @@
       separator-class="bg-grey-5"
     >
       <template v-slot:before>
-        <ProductPrice v-bind="$attrs" v-if="productClass !== '運費' && productClass !== '其他費用'" />
-        <Cost v-else />
+        <ProductPrice v-bind="$attrs" v-if="currentCostItem !== '運費' && currentCostItem !== '其他費用'" />
+        <Cost v-bind="$attrs" v-else />
       </template>
 
       <template v-slot:separator>
@@ -37,7 +37,7 @@ export default {
     return {
       splitterModel: 30, // start at 30%
       sheetItemCopy: undefined,
-      productClass: this.$attrs.productClass
+      currentCostItem: this.$attrs.currentCostItem
     }
   },
   computed: {
@@ -54,14 +54,14 @@ export default {
     }),
     submitProductClassOnGlobalEventBus () {
       this.$root.$once('submitProductClass', async (costItem) => {
-        if (costItem === this.productClass) {
-          const productClassHasItem = await this.tableData.slice(8).findIndex(elem => 'id' in elem && elem.id.includes(this.productClass)) > -1
+        if (costItem === this.currentCostItem) {
+          const productClassHasItem = await this.tableData.slice(8).findIndex(elem => 'id' in elem && elem.id.includes(this.currentCostItem)) > -1
           if (productClassHasItem) {
-            this.updateStep(this.step + 1)
+            await this.updateStep(this.step + 1)
           } else {
             this.$q.notify({
               type: 'negative',
-              message: `請增加"${this.productClass}"項目`
+              message: `請增加"${this.currentCostItem}"項目`
             })
             this.submitProductClassOnGlobalEventBus()
           }

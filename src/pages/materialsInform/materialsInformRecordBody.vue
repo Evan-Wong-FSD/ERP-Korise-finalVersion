@@ -11,7 +11,7 @@
             outlined
             clearable
             input-debounce="1000"
-            :use-input="elem.name !== 'productName'"
+            :use-input="elem.name !== 'model'"
             v-model="elem.value"
             :ref="elem.name"
             :disable="isDisable(elem)"
@@ -20,15 +20,15 @@
             @filter="(typeIn, update, abort) => { onFilter(elem, typeIn.trim(), update, abort) }"
             @input="(value) => { onInput(elem, value) }"
             @clear="() => { onClear(elem) }"
-            v-if="'options' in elem"
+            v-if="'options' in elem && elem.name !== 'productName'"
             :rules="[val => val && val.length > 0 || `'${elem.label}'不能為空值`]"
           >
             <template v-slot:no-option>
-              <ProductNameSerialNumber
-                v-if="elem.name === 'productName'"
-                :inputBox="inputBox"
-                @updateProductName="updateProductName"
-                @hidePopup="$refs.productName[0].hidePopup()"
+              <InnerModel
+                :productClass="productClass"
+                :productSubclass="productSubclass"
+                @inputModel="inputModel"
+                v-if="elem.name === 'model'"
               />
 
               <q-item v-else>
@@ -38,10 +38,38 @@
 
             <template v-slot:selected-item="scope">
               {{
-                (elem.name === 'productClass' || elem.name === 'productSubclass' || elem.name === 'productName') && scope.opt
+                (elem.name === 'productClass' || elem.name === 'productSubclass') && scope.opt
                   ? `${scope.opt} (流水號：${retrieveSerialNumber(elem.name)})`
                   : scope.opt
               }}
+            </template>
+          </q-select>
+
+          <q-select
+            outlined
+            clearable
+            input-debounce="1000"
+            use-input
+            v-model="elem.value"
+            new-value-mode="add-unique"
+            :ref="elem.name"
+            :disable="isDisable(elem)"
+            :options="elem.options"
+            :label="elem.label"
+            @filter="(typeIn, update, abort) => { onFilter(elem, typeIn.trim(), update, abort) }"
+            @input="(value) => { onInput(elem, value) }"
+            @clear="() => { onClear(elem) }"
+            v-else-if="elem.name === 'productName'"
+            :rules="[val => val && val.length > 0 || `'${elem.label}'不能為空值`]"
+          >
+            <template v-slot:no-option>
+              <q-item>
+                <q-item-section class="text-grey" v-html="'無結果'" />
+              </q-item>
+            </template>
+
+            <template v-slot:selected-item="scope">
+              {{scope.opt ? `${scope.opt} (流水號：${retrieveSerialNumber(elem.name)})` : scope.opt}}
             </template>
           </q-select>
 
@@ -80,7 +108,6 @@
           </q-chip>
         </div>
 
-        <!-- @failed ="uploadFinished('negative', '上傳失敗')" -->
         <q-uploader
           ref="uploader"
           accept=".pdf"
@@ -116,10 +143,10 @@
 <script>
 import { mapState, mapMutations } from 'vuex'
 import { materialsInformtAPI } from 'boot/axios'
-import ProductNameSerialNumber from 'src/pages/materialsInform/slot/productNameSerialNumber/Index.vue'
+import InnerModel from 'src/pages/materialsInform/slot/innerModel/Index.vue'
 export default {
   components: {
-    ProductNameSerialNumber
+    InnerModel
   },
   data () {
     return {
@@ -130,18 +157,22 @@ export default {
         'productNameSerialNumber',
         'caliber',
         'caliberSerialNumber',
+        'thickness',
+        'thicknessSerialNumber',
         'pipeMaterialName',
         'pipeMaterialNameSerialNumber',
         'productPartNumber'
       ],
-      uploadedFileChip: false,
-      ipv4: null
+      uploadedFileChip: false
     }
   },
   computed: {
     ...mapState('materialsInform', ['menuSelected', 'materialsInform', 'tableDataSelected']),
     productClass () {
       return this.inputBox.find(elem => elem.name === 'productClass')
+    },
+    productSubclass () {
+      return this.inputBox.find(elem => elem.name === 'productSubclass')
     },
     productNameSerialNumber () {
       const findMaterialsInform = (name) => this.materialsInform.find(elem => elem.name === name)
@@ -165,23 +196,26 @@ export default {
   methods: {
     ...mapMutations('materialsInform', {
       updateProductPartNumber: 'updateProductPartNumber',
-      resetPipeMaterial: 'resetPipeMaterial',
+      // resetPipeMaterial: 'resetPipeMaterial',
       resetProductNameSerialNumber: 'resetProductNameSerialNumber',
-      resetProductPartNumber: 'resetProductPartNumber',
+      // resetProductPartNumber: 'resetProductPartNumber',
       updateProductClassSerialNumber: 'updateProductClassSerialNumber',
       resetProductClassSerialNumber: 'resetProductClassSerialNumber',
       updateProductSubclassSerialNumber: 'updateProductSubclassSerialNumber',
       resetProductSubclassSerialNumber: 'resetProductSubclassSerialNumber',
-      resetMaterialsInform: 'resetMaterialsInform'
+      resetMaterialsInform: 'resetMaterialsInform',
+      resetModel: 'resetModel'
     }),
     isDisable (elem) {
       const find = (name) => this.inputBox.find(elem => elem.name === name)
       if (elem.name === 'productClass') return !(find('taxIdNumber').value && find('firm').value)
       if (elem.name === 'productSubclass') return !find('productClass').value
-      if (elem.name === 'productName') return !find('productSubclass').value
+      if (elem.name === 'model') return !find('productSubclass').value
+      if (elem.name === 'productName') return !find('model').value
     },
     onFilter (elem, typeIn, update, abort) {
-      if (elem.name === 'productName') return update()
+      // if (elem.name === 'productName') return update()
+      if (elem.name === 'model') return update()
       if (typeIn.length < 2) return abort()
       this.requestOptions(elem, typeIn, update)
     },
@@ -210,10 +244,13 @@ export default {
         if (select.name === 'productClass') this.updateProductClassSerialNumber({ serialNumber })
         if (select.name === 'productSubclass') this.updateProductSubclassSerialNumber({ serialNumber })
         select.value = label
+      } else if (select.name === 'productName') {
+        if (typeof select.value === 'object') select.value = select.value.label
+        this.updateProductPartNumber()
       }
     },
     inputRules (elem, value) {
-      const arrInputFree = ['voltage', 'current', 'frequency', 'powerOutput']
+      const arrInputFree = ['voltage', 'current', 'frequency', 'powerOutput', 'description', 'specification', 'characteristic']
       if (arrInputFree.includes(elem.name)) return []
       return (value && value.length > 0) || `'${elem.label}'不能為空值`
     },
@@ -222,48 +259,58 @@ export default {
       if (name === 'productSubclass') return this.materialsInform.find(elem => elem.name === 'productSubclassSerialNumber').value
       if (name === 'productName') return this.materialsInform.find(elem => elem.name === 'productNameSerialNumber').value
     },
-    updateProductName (value) {
-      const { selects } = value
-      const productName = this.inputBox.find(elem => elem.name === 'productName')
-      productName.value = selects.reduce((total, elem) => {
-        return total + elem.value
-      }, '')
-      this.updateProductPartNumber({ partNumber: this.productPartNumber })
-    },
+    // updateModel (value) {
+    //   const { selects } = value
+    //   const productName = this.inputBox.find(elem => elem.name === 'productName')
+    //   // productName.value = selects.reduce((total, elem) => {
+    //   //   return total + elem.value
+    //   // }, '')
+    //   const retrieveSelect = (name) => selects.find(select => select.name === name)
+    //   productName.value = retrieveSelect('pipeMaterialName').value + retrieveSelect('thickness').value + retrieveSelect('caliber').value
+    //   this.updateProductPartNumber({ partNumber: this.productPartNumber })
+    // },
     onClear (select) {
       const clearItems = [
         { name: 'taxIdNumber', clear: this.resetFirm },
         { name: 'firm', clear: this.resetFirm },
-        { name: 'productClass', clear: this.resetProductClass },
-        { name: 'productSubclass', clear: this.resetProductSubclass },
-        { name: 'productName', clear: this.resetProductName }
+        { name: 'productClass', clear: this.resetProductClassSerialNumber },
+        { name: 'productSubclass', clear: this.resetProductSubclassSerialNumber },
+        { name: 'model', clear: this.resetModel },
+        { name: 'productName', clear: this.resetProductNameSerialNumber }
       ]
       const startClearIndex = clearItems.findIndex(elem => elem.name === select.name)
       const clearScope = clearItems.slice(startClearIndex)
-      clearScope.forEach(elem => {
-        elem.clear()
-      })
+      clearScope.forEach(elem => this.clearTheFollowings(elem))
     },
     resetFirm () {
       const taxIdNumber = this.inputBox.find(elem => elem.name === 'taxIdNumber')
       const firm = this.inputBox.find(elem => elem.name === 'firm')
-      if (taxIdNumber.value) taxIdNumber.value = ''
-      if (firm.value) firm.value = ''
+      if (taxIdNumber.value) {
+        taxIdNumber.value = ''
+      } else if (firm.value) {
+        firm.value = ''
+      }
     },
-    resetProductClass () {
-      const productClass = this.inputBox.find(elem => elem.name === 'productClass')
-      productClass.value = ''
-      this.resetProductClassSerialNumber()
-    },
-    resetProductSubclass () {
-      const productSubclass = this.inputBox.find(elem => elem.name === 'productSubclass')
-      productSubclass.value = ''
-      this.resetProductSubclassSerialNumber()
-    },
-    resetProductName () {
-      const productName = this.inputBox.find(elem => elem.name === 'productName')
-      productName.value = ''
-      this.$root.$emit('clearProductNameSerialNumber')
+    // resetProductClass () {
+    //   const productClass = this.inputBox.find(elem => elem.name === 'productClass')
+    //   productClass.value = ''
+    //   this.resetProductClassSerialNumber()
+    // },
+    // resetProductSubclass () {
+    //   const productSubclass = this.inputBox.find(elem => elem.name === 'productSubclass')
+    //   productSubclass.value = ''
+    //   this.resetProductSubclassSerialNumber()
+    // },
+    // resetProductName () {
+    //   const productName = this.inputBox.find(elem => elem.name === 'productName')
+    //   productName.value = ''
+    //   // this.$root.$emit('clearProductNameSerialNumber')
+    //   this.resetProductNameSerialNumber()
+    // },
+    clearTheFollowings (item) {
+      const inputItem = this.inputBox.find(elem => elem.name === item.name)
+      inputItem.value = ''
+      item.clear()
     },
     emitUploader () {
       this.$refs.form.validate().then(success => {
@@ -301,10 +348,11 @@ export default {
       this.inputBox.forEach(elem => {
         elem.value = ''
         if ('options' in elem) elem.options.splice(0, elem.options.length)
-        this.resetPipeMaterial()
-        this.resetProductNameSerialNumber()
-        this.resetProductPartNumber()
+        // this.resetPipeMaterial()
+        // this.resetProductNameSerialNumber()
+        // this.resetProductPartNumber()
       })
+      this.resetMaterialsInform()
     },
     onSubmit () {
       // if (this.selectedId) {
@@ -336,14 +384,10 @@ export default {
         Object.assign(hiddenInput, elem)
       })
       if (this.menuSelected === '記錄') {
-        if (this.$refs.uploader.files.length !== 1) return this.$q.notify({ type: 'warning', message: '請先上傳檔案' })
         materialsInformtAPI.post('/api/insertMaterialsInform', { materialsInform: this.inputBox }).then(res => {
           const { type, message } = res.data
           this.$q.notify({ type, message })
-          if (type === 'positive') {
-            this.$refs.uploader.upload()
-            this.$refs.form.reset()
-          }
+          if (type === 'positive') this.$refs.form.reset()
         })
       } else if (this.menuSelected === '表單') {
         new Promise(resolve => {
@@ -358,6 +402,11 @@ export default {
           })
         })
       }
+    },
+    inputModel (input) {
+      const model = this.inputBox.find(elem => elem.name === 'model')
+      model.value = input
+      this.$refs.model[0].hidePopup()
     }
   }
 }

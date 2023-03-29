@@ -44,15 +44,15 @@ export default {
   computed: {
     ...mapState('invoiceRecord', ['step'])
   },
-  beforeMount () {
-    this.initState()
-  },
+  // beforeMount () {
+  //   this.initState()
+  // },
   methods: {
     ...mapMutations('invoiceRecord', {
       resetStep: 'resetStep',
       resetInputsOnBaseOfPurchseRecord: 'resetInputsOnBaseOfPurchseRecord',
-      resetInputsOnDetailOfPurchseRecord: 'resetInputsOnDetailOfPurchseRecord',
-      initState: 'initState'
+      resetInputsOnDetailOfPurchseRecord: 'resetInputsOnDetailOfPurchseRecord'
+      // initState: 'initState'
     })
   },
   beforeDestroy () {
