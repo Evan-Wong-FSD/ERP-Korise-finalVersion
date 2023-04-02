@@ -32,13 +32,13 @@ module.exports = function () {
   }
 
   app.get('/api/calculateRowsNumber', function (req, res) {
-    MongoClient.connect('mongodb://127.0.0.1:27017', { useUnifiedTopology: true }, function (err0, client) {
+    MongoClient.connect('mongodb://127.0.0.1:27017', { useUnifiedTopology: true }, async function (err0, client) {
       try {
         const href = new URL(`http://${req.headers.host}${req.url}`), filter = JSON.parse(getParam(href, 'filter'))
         const $addFields = {
           matched: {
-            $and: filter.reduce((total, elem) => {
-              total.push({ $regexMatch: { input: `$${elem.label}`, regex: transformTypeInForRegex(elem.typeIn), options: 'i' } })
+            $and: await filter.reduce((total, elem) => {
+              total.push({ $regexMatch: { input: { $toString: `$${elem.label}` }, regex: transformTypeInForRegex(elem.typeIn), options: 'i' } })
               return total
             }, [])
           }
@@ -48,8 +48,7 @@ module.exports = function () {
           : [{ $match: {} }, { $count: 'rowsNumber' }]
         client.db('ERP').collection('ProductClassification').aggregate(aggregateProps).toArray((err1, document) => {
           try {
-            const { rowsNumber } = document[0]
-            res.send({ rowsNumber })
+            res.send({ rowsNumber: document[0] })
             client.close()
           } catch (err1) {
             client.close()
@@ -73,7 +72,7 @@ module.exports = function () {
         const $addFields = {
           matched: {
             $and: filter.reduce((total, elem) => {
-              total.push({ $regexMatch: { input: `$${elem.label}`, regex: transformTypeInForRegex(elem.typeIn), options: 'i' } })
+              total.push({ $regexMatch: { input: { $toString: `$${elem.label}` }, regex: transformTypeInForRegex(elem.typeIn), options: 'i' } })
               return total
             }, [])
           }
@@ -120,7 +119,7 @@ module.exports = function () {
         const href = new URL(`http://${req.headers.host}${req.url}`)
         const select = JSON.parse(getParam(href, 'select')), inputBoxs = JSON.parse(getParam(href, 'inputBoxs')), typeIn = getParam(href, 'typeIn')
         const collection = select.name === 'taxIdNumber' || select.name === 'firm' ? 'firmInform' : 'ProductClassification'
-        const input = collection === 'firmInform' ? `$firmInform.${select.label}` : `$${select.label}`
+        const input = collection === 'firmInform' ? { $toString: `$firmInform.${select.label}` } : { $toString: `$${select.label}` }
         const $addFields = { matched: { $regexMatch: { input, regex: new RegExp(transformTypeInForRegex(typeIn)), options: 'i' } } }
         const $match = inputBoxs.reduce((total, elem) => {
           const { label, value } = elem

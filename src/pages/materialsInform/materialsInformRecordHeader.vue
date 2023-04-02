@@ -1,7 +1,7 @@
 <template>
     <header class="row justify-between q-px-lg q-pt-lg">
       <div>
-        <h1 class="text-h4 text-grey-10 text-center">材料資料</h1>
+        <h1 class="text-h4 text-grey-10 text-center">材料資料管理</h1>
         <div class="header-width header-underline"></div>
       </div>
 

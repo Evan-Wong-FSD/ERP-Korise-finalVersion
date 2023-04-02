@@ -60,8 +60,9 @@ export default {
       return JSON.stringify(this.searchingColumns.filter(elem => elem.selected && elem.typeIn))
     }
   },
-  mounted () {
-    this.initTableData()
+  async mounted () {
+    await this.initTableData()
+    this.onRequest({ pagination: this.pagination, filter: this.filter })
     this.globalEventBusOnDeleteTableData()
     this.globalEventBusOnResetSelectedOnTable()
   },
@@ -77,16 +78,16 @@ export default {
       this.loading = true
       ProductClassificationAPI.get('/api/calculateRowsNumber', { params: { filter } }).then(res => {
         pagination.rowsNumber = res.data.rowsNumber
-        this.onRequest({ pagination, filter })
+        // this.onRequest({ pagination, filter })
       })
     },
-    onRequest (props) {
+    async onRequest (props) {
       const { pagination, filter } = props, { page, rowsPerPage } = pagination
       this.oldRowsRendered = (page - 1) * rowsPerPage
       Object.assign(this.pagination, pagination)
       const { oldRowsRendered, newRowsRendered, columns } = this
       this.loading = true
-      ProductClassificationAPI.post('/api/obtainTableData', { oldRowsRendered, newRowsRendered, pagination, filter, columns }).then(res => {
+      await ProductClassificationAPI.post('/api/obtainTableData', { oldRowsRendered, newRowsRendered, pagination, filter, columns }).then(res => {
         this.loadTableData(res.data.tableData)
         this.loading = false
       })

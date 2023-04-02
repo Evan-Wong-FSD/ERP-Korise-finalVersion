@@ -14,7 +14,7 @@
   >
     <template v-slot:top-left>
       <div class="row no-wrap Wrap">
-        <ExportExcel @updateSheetName="sheetName = $event" />
+        <ExportExcel v-on="$listeners" @updateSheetName="sheetName = $event" />
         <TimeLimit :style="`z-index: ${sheetName === 'bomSheet' ? -1 : 'auto'};`" />
       </div>
     </template>

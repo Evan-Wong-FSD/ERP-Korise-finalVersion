@@ -30,7 +30,7 @@ export default function () {
     ],
     tableData: [
       { column0: '瑋安企業有限公司' },
-      { column0: '新北市五股區凌雲路3段18之10號' },
+      { column0: '新北市八里區賢一街129-1號' },
       { column0: 'Tel：02-8292-7060', column1: 'Fax：02-8292-7201' },
       { column0: '物  料  清  單' },
       { column0: '', column1: '客戶名稱：', column2: '', column3: '編        號：', column4: '' },

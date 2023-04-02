@@ -50,10 +50,10 @@ export default {
       loginStatus: null,
       menuButton: {
         進銷庫存記錄: false,
-        進銷項表單: false,
+        歷史進銷查詢: false,
         物料清單: false,
         BOM表: false,
-        材料資料: false,
+        材料資料管理: false,
         產品種類: false,
         廠商資料: false
       }

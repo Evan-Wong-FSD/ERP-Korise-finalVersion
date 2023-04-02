@@ -20,7 +20,7 @@
         <template v-slot:no-option>
           <q-item>
             <q-item-section class="text-grey">
-              無結果
+              按Enter輸入
             </q-item-section>
           </q-item>
         </template>

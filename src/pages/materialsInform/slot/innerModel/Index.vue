@@ -35,7 +35,7 @@
           >
             <template v-slot:no-option>
               <q-item>
-                <q-item-section class="text-italic text-grey" v-html="'無結果'" />
+                <q-item-section class="text-italic text-grey" v-html="'按Enter輸入'" />
               </q-item>
             </template>
           </q-select>
@@ -59,7 +59,7 @@
           >
             <template v-slot:no-option>
               <q-item>
-                <q-item-section class="text-italic text-grey" v-html="'無結果'" />
+                <q-item-section class="text-italic text-grey" v-html="'按Enter輸入'" />
               </q-item>
             </template>
           </q-select>

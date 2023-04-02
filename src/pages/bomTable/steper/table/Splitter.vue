@@ -15,7 +15,7 @@
       </template>
 
       <template v-slot:after>
-        <Sheet />
+        <Sheet v-on="$listeners" />
       </template>
 
     </q-splitter>

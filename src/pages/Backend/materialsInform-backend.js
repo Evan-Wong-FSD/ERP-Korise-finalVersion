@@ -235,26 +235,23 @@ module.exports = function () {
           if (name === 'productName') return 'materialsInform'
         })()
         const input = collection === 'firmInform' ? `$firmInform.${label}` : `$${label}`
-        const $addFields = { matched: { $regexMatch: { input, regex: transformTypeInForRegex(typeIn), options: 'i' } } }
-        const $match = Object.assign({ matched: true }, hasValueSelects.reduce((total, elem) => {
+        const $addFields = { matched: { $regexMatch: { input, regex: { $toString: transformTypeInForRegex(typeIn) }, options: 'i' } } }
+        const $match = hasValueSelects.reduce((total, elem) => {
           const { label, value } = elem
           return collection === 'firmInform'
             ? Object.assign(total, Object.fromEntries([[`firmInform.${label}`, value]]))
             : Object.assign(total, Object.fromEntries([[label, value]]))
-        }, {}))
-        // const $addToSet = collection === 'firmInform' ? `$firmInform.${label}` : (() => {
-        //   if (label === '產品種類') return { label: `$${label}`, serialNumber: '$種類料號' }
-        //   if (label === '產品材質') return { label: `$${label}`, serialNumber: '$材質料號' }
-        // })()
+        }, {})
         const $addToSet = collection === 'firmInform' ? `$firmInform.${label}` : (() => {
           if (name === 'productClass') return { label: `$${label}`, serialNumber: '$種類料號' }
           if (name === 'productSubclass') return { label: `$${label}`, serialNumber: '$材質料號' }
           if (name === 'productName') return { label: `$${label}` }
         })()
         const $group = Object.fromEntries([['_id', null], [label, { $addToSet }]])
-        // const $project = Object.fromEntries([['_id', 0], [label, 1]])
-        // , { $project }, { $limit: 5 }
-        client.db('ERP').collection(collection).aggregate([{ $addFields }, { $match }, { $group }]).toArray((err1, document) => {
+        const aggregateProps = name === 'productClass' || name === 'productSubclass'
+          ? [{ $match }, { $group }]
+          : [{ $addFields }, { $match: Object.assign($match, { matched: true }) }, { $group }]
+        client.db('ERP').collection(collection).aggregate(aggregateProps).toArray((err1, document) => {
           try {
             res.send({ options: document.length > 0 ? document[0][label] : [] })
             client.close()
@@ -431,7 +428,7 @@ module.exports = function () {
         const $addFields = {
           matched: {
             $and: filter.reduce((total, elem) => {
-              total.push({ $regexMatch: { input: `$${elem.label}`, regex: transformTypeInForRegex(elem.typeIn), options: 'i' } })
+              total.push({ $regexMatch: { input: { $toString: `$${elem.label}` }, regex: transformTypeInForRegex(elem.typeIn), options: 'i' } })
               return total
             }, [])
           }
@@ -669,7 +666,7 @@ module.exports = function () {
     MongoClient.connect('mongodb://127.0.0.1:27017', { useUnifiedTopology: true }, function (err0, client) {
       try {
         const { typeIn, item, reference } = req.body
-        const $addFields = { matched: { $regexMatch: { input: `$${item.label}`, regex: typeIn, options: 'i' } } }
+        const $addFields = { matched: { $regexMatch: { input: { $toString: `$${item.label}` }, regex: typeIn, options: 'i' } } }
         const $match = Object.fromEntries ([
           ['matched', true], ...Object.values(reference).map(elem => [elem.label, elem.value])
         ])
@@ -696,7 +693,7 @@ module.exports = function () {
     MongoClient.connect('mongodb://127.0.0.1:27017', { useUnifiedTopology: true }, function (err0, client) {
       try {
         const { typeIn, reference } = req.body
-        const $addFields = { matched: { $regexMatch: { input: '$型號', regex: typeIn, options: 'i' } } }
+        const $addFields = { matched: { $regexMatch: { input: { $toString: '$型號' }, regex: typeIn, options: 'i' } } }
         const $match = Object.fromEntries ([
           ['matched', true], ...Object.values(reference).map(elem => [elem.label, elem.value])
         ])
@@ -754,7 +751,7 @@ module.exports = function () {
         const $addFields = {
           matched: {
             $and: filter.reduce((total, elem) => {
-              total.push({ $regexMatch: { input: `$${elem.label}`, regex: transformTypeInForRegex(elem.typeIn), options: 'i' } })
+              total.push({ $regexMatch: { input: { $toString: `$${elem.label}` }, regex: transformTypeInForRegex(elem.typeIn), options: 'i' } })
               return total
             }, [])
           }

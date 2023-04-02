@@ -23,6 +23,19 @@
             v-if="'options' in elem && elem.name !== 'productName'"
             :rules="[val => val && val.length > 0 || `'${elem.label}'不能為空值`]"
           >
+            <template v-slot:option="scope">
+              <q-item
+                v-bind="scope.itemProps"
+                v-on="scope.itemEvents"
+              >
+                <q-item-section v-if="elem.name === 'productClass' || elem.name === 'productSubclass'">
+                  <q-item-label v-html="`${scope.opt.serialNumber} (${scope.opt.label})`" />
+                </q-item-section>
+
+                <q-item-section v-else><q-item-label v-html="scope.opt" /></q-item-section>
+              </q-item>
+            </template>
+
             <template v-slot:no-option>
               <InnerModel
                 :productClass="productClass"
@@ -39,7 +52,7 @@
             <template v-slot:selected-item="scope">
               {{
                 (elem.name === 'productClass' || elem.name === 'productSubclass') && scope.opt
-                  ? `${scope.opt} (流水號：${retrieveSerialNumber(elem.name)})`
+                  ? `${retrieveSerialNumber(elem.name)} (${scope.opt})`
                   : scope.opt
               }}
             </template>
@@ -64,7 +77,7 @@
           >
             <template v-slot:no-option>
               <q-item>
-                <q-item-section class="text-grey" v-html="'無結果'" />
+                <q-item-section class="text-grey" v-html="'按Enter輸入'" />
               </q-item>
             </template>
 
@@ -91,7 +104,7 @@
             size="lg"
             color="white"
             text-color="grey-10"
-            label="上傳"
+            label="上傳PDF"
             class="border-radius-btn relative-position"
             @click="emitUploader"
           />
@@ -196,15 +209,15 @@ export default {
   methods: {
     ...mapMutations('materialsInform', {
       updateProductPartNumber: 'updateProductPartNumber',
-      // resetPipeMaterial: 'resetPipeMaterial',
       resetProductNameSerialNumber: 'resetProductNameSerialNumber',
-      // resetProductPartNumber: 'resetProductPartNumber',
       updateProductClassSerialNumber: 'updateProductClassSerialNumber',
       resetProductClassSerialNumber: 'resetProductClassSerialNumber',
       updateProductSubclassSerialNumber: 'updateProductSubclassSerialNumber',
       resetProductSubclassSerialNumber: 'resetProductSubclassSerialNumber',
       resetMaterialsInform: 'resetMaterialsInform',
-      resetModel: 'resetModel'
+      resetModel: 'resetModel',
+      updateMaterialsInformOptions: 'updateMaterialsInformOptions',
+      resetMaterialsInformOptions: 'resetMaterialsInformOptions'
     }),
     isDisable (elem) {
       const find = (name) => this.inputBox.find(elem => elem.name === name)
@@ -214,9 +227,14 @@ export default {
       if (elem.name === 'productName') return !find('model').value
     },
     onFilter (elem, typeIn, update, abort) {
-      // if (elem.name === 'productName') return update()
       if (elem.name === 'model') return update()
-      if (typeIn.length < 2) return abort()
+      if (typeIn.length < 2 && elem.name !== 'productClass' && elem.name !== 'productSubclass') return abort()
+      if ((elem.name === 'productClass' || elem.name === 'productSubclass')) {
+        const findMaterialsInform = (name) => this.materialsInform.find(elem => elem.name === name), { options } = findMaterialsInform(elem.name)
+        if (options.length > 0) {
+          return update(() => elem.options.splice(0, elem.options.length, ...options.filter(option => new RegExp(option.label, 'i').test(typeIn) || new RegExp(option.serialNumber, 'i').test(typeIn))))
+        }
+      }
       this.requestOptions(elem, typeIn, update)
     },
     requestOptions (target, typeIn, update) {
@@ -224,6 +242,7 @@ export default {
       const hasValueSelects = this.inputBox.filter(elem => 'options' in elem && elem.name !== target.name && elem.value)
       materialsInformtAPI.get('/api/filterOptions', { params: { name, label, typeIn, hasValueSelects: JSON.stringify(hasValueSelects) } }).then(res => {
         update(() => {
+          if (target.name === 'productClass' || target.name === 'productSubclass') this.updateMaterialsInformOptions({ name: target.name, options: res.data.options })
           options.splice(0, options.length, ...res.data.options)
         })
       })
@@ -244,6 +263,7 @@ export default {
         if (select.name === 'productClass') this.updateProductClassSerialNumber({ serialNumber })
         if (select.name === 'productSubclass') this.updateProductSubclassSerialNumber({ serialNumber })
         select.value = label
+        this.resetMaterialsInformOptions({ name: select.name })
       } else if (select.name === 'productName') {
         if (typeof select.value === 'object') select.value = select.value.label
         this.updateProductPartNumber()

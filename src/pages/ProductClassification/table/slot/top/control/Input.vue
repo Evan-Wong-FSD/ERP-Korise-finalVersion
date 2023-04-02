@@ -26,7 +26,7 @@
           @clear="() => { onClear(elem.name) }"        >
           <template v-slot:no-option>
             <q-item v-show="hasSelectTypeIn">
-              <q-item-section class="text-grey" v-text="'無結果'" />
+              <q-item-section class="text-grey" v-text="elem.name !== 'productPartNumber' && elem.name !== 'productSubclassPartNumber' ? '按Enter輸入' : '無結果'" />
             </q-item>
           </template>
         </q-select>

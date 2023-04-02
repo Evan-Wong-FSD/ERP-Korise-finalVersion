@@ -149,12 +149,12 @@ module.exports = function () {
     if (inputKey === 'client') {
       if (typeIn) $project.client = 1
       $addFields.display = {
-        $regexMatch: { input: `$${inputKey}.value`, regex: typeIn || inputValue, options: 'i' }
+        $regexMatch: { input: { $toString: `$${inputKey}.value` }, regex: typeIn || inputValue, options: 'i' }
       }
     } else {
       if (typeIn) $project.sheetInform = 1
       $addFields.display = {
-        $regexMatch: { input: `$sheetInform.${inputKey}.value`, regex: typeIn || inputValue, options: 'i' }
+        $regexMatch: { input: { $toString: `$sheetInform.${inputKey}.value` }, regex: typeIn || inputValue, options: 'i' }
       }
     }
 
@@ -750,10 +750,8 @@ module.exports = function () {
   app.post('/api/filterOtherCosts', function (req, res) {
     MongoClient.connect('mongodb://127.0.0.1:27017', { useUnifiedTopology: true }, function (err0, client) {
       try {
-        // const { productClass, productSubclass, inputItem, typeIn, label } = req.body
         const { reference, inputItem, typeIn, label } = req.body
-        const $addFields = { matched: { $regexMatch: { input: `$${label}`, regex: typeIn, options: 'i' } } }
-        // const $match = { matched: true, 產品種類: productClass, 產品材質: productSubclass }
+        const $addFields = { matched: { $regexMatch: { input: { $toString: `$${label}` }, regex: typeIn, options: 'i' } } }
         const $match = Object.assign({ matched: true }, reference)
         const $group = Object.fromEntries([['_id', null], [inputItem.name, { $addToSet: `$${label}` }]])
         client.db('ERP').collection('invoiceRecord').aggregate([{ $addFields }, { $match }, { $group }]).toArray((err1, document) => {
@@ -780,8 +778,7 @@ module.exports = function () {
         return
       }
       const { productClass, inputValue, label } = req.body
-      // const $match = productClass.value ? { 產品種類: productClass.value } : {}
-      const $addFields = { matched: { $regexMatch: { input: `$${label}`, regex: inputValue, options: 'i' } } }
+      const $addFields = { matched: { $regexMatch: { input: { $toString: `$${label}` }, regex: inputValue, options: 'i' } } }
       const $match = { 產品種類: productClass, matched: true }, $project = { _id: 0, 產品名稱: 1 }
       client.db('ERP').collection('materialsInform').aggregate([{ $addFields }, { $match }, { $project }]).toArray((err1, document) => {
         if (err1) {
@@ -842,7 +839,7 @@ module.exports = function () {
     const { productClassTypeIn } = req.body
     MongoClient.connect('mongodb://127.0.0.1:27017', { useUnifiedTopology: true }, function (err0, client) {
       try {
-        const $addFields = { productClassMatched: { $regexMatch: { input: '$產品種類', regex: productClassTypeIn, options: 'i' } } }
+        const $addFields = { productClassMatched: { $regexMatch: { input: { $toString: '$產品種類' }, regex: productClassTypeIn, options: 'i' } } }
         const $match = { productClassMatched: true }, $project = { _id: 0, 產品種類: 1 }
         client.db('ERP').collection('ProductClassification').aggregate([{ $addFields }, { $match }, { $project }]).toArray((err1, document) => {
           try {

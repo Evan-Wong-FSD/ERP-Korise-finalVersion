@@ -79,7 +79,7 @@ module.exports = function () {
       try {
         const href = new URL(`http://${req.headers.host}${req.url}`)
         const label = getParam(href, 'label'), typeIn = getParam(href, 'typeIn')
-        const $addFields = { matched: { $regexMatch: { input: `$firmInform.${label}`, regex: typeIn, options: "i" } } }
+        const $addFields = { matched: { $regexMatch: { input: { $toString: `$firmInform.${label}` }, regex: typeIn, options: "i" } } }
         const $match = { matched: true }, $project = { _id: 0, matched: 0, contactPersonInform: 0 }
         const $group = Object.assign({ _id: null }, Object.fromEntries([[label, { $addToSet: `$firmInform.${label}` }]]))
         client.db('ERP').collection('firmInform').aggregate([{ $addFields }, { $match }, { $project }, { $group }]).toArray((err1, document) => {

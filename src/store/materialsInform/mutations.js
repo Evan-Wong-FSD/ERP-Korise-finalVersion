@@ -142,6 +142,18 @@ const resetModel = (state) => {
   })
 }
 
+const updateMaterialsInformOptions = (state, value) => {
+  const { name, options } = value
+  const materialsInform = state.materialsInform.find(elem => elem.name === name)
+  materialsInform.options.splice(0, materialsInform.options.length, ...options)
+}
+
+const resetMaterialsInformOptions = (state, value) => {
+  const { name } = value
+  const materialsInform = state.materialsInform.find(elem => elem.name === name)
+  materialsInform.options.splice(0, materialsInform.options.length)
+}
+
 export {
   updateMenuSelected,
   updateMaterialsInform,
@@ -164,5 +176,7 @@ export {
   loadTableData,
   updateTableDataSelected,
   resetTableDataSelected,
-  resetModel
+  resetModel,
+  updateMaterialsInformOptions,
+  resetMaterialsInformOptions
 }

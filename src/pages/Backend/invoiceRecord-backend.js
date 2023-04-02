@@ -103,7 +103,7 @@ module.exports = function () {
           if (purchaseSalesSelected.value !== 'all') $match.進銷項 = purchaseSalesSelected.label
         } else {
           const { label, value } = searchItem[item]
-          $addFields.searchTypeInMatch = { $regexMatch: { input: `$${label}`, regex: value, options: 'i' } }
+          $addFields.searchTypeInMatch = { $regexMatch: { input: { $toString: `$${label}` }, regex: value, options: 'i' } }
           verify('searchTypeInMatch')
         }
       }
@@ -262,7 +262,7 @@ module.exports = function () {
     MongoClient.connect('mongodb://127.0.0.1:27017', { useUnifiedTopology: true }, function (err0, client) {
       try {
         const { label, typeInValue } = req.body
-        const $addFields = { display: { $regexMatch: { input: `$firmInform.${label}`, regex: typeInValue, options: 'i' } } }
+        const $addFields = { display: { $regexMatch: { input: { $toString: `$firmInform.${label}` }, regex: typeInValue, options: 'i' } } }
         const $match = { display: true }
         const $project = { _id: 0, 'firmInform.統編': 1, 'firmInform.公司名稱': 1 }
         client.db('ERP').collection('firmInform').aggregate([{ $addFields }, { $match }, { $project }]).toArray((err1, document) => {
@@ -447,7 +447,7 @@ module.exports = function () {
         const $project = { _id: 0, 'sheetInform.serialNumber.value': 1 }
         const $addFields = {
           serialNumberMatched: {
-            $regexMatch: { input: '$sheetInform.serialNumber.value', regex: serialNumberTypeIn, options: 'i' }
+            $regexMatch: { input: { $toString: '$sheetInform.serialNumber.value' }, regex: serialNumberTypeIn, options: 'i' }
           }
         }
         client.db('ERP').collection('basicInformForBomSheet2').aggregate([{ $unwind: '$sheetInform' }, { $addFields }, { $match }, { $project }]).toArray((err1, document) => {
@@ -791,7 +791,7 @@ module.exports = function () {
         const $group = { _id: null, options: { $addToSet: '$產品種類' } }, $project = { _id: 0 }
         const props = [{ $match }, { $group }, { $project }]
         if (typeIn) {
-          const $addFields = { matched: { $regexMatch: { input: '$產品種類', regex: typeIn, options: 'i' } } }
+          const $addFields = { matched: { $regexMatch: { input: { $toString: '$產品種類' }, regex: typeIn, options: 'i' } } }
           props.unshift({ $addFields  })
           Object.assign($match, { matched: true })
         }
@@ -822,7 +822,7 @@ module.exports = function () {
         const $group = { _id: null, options: { $addToSet: '$產品材質' } }, $project = { _id: 0 }
         const props = [{ $match }, { $group }, { $project }]
         if (typeIn) {
-          const $addFields = { matched: { $regexMatch: { input: '$產品材質', regex: typeIn, options: 'i' } } }
+          const $addFields = { matched: { $regexMatch: { input: { $toString: '$產品材質' }, regex: typeIn, options: 'i' } } }
           props.unshift({ $addFields  })
           Object.assign($match, { matched: true })
         }
@@ -857,7 +857,7 @@ module.exports = function () {
         const $group = { _id: null, options: { $addToSet: '$產品名稱' } }, $project = { _id: 0 }
         const props = [{ $match }, { $group }, { $project }]
         if (typeIn) {
-          const $addFields = { matched: { $regexMatch: { input: '$產品名稱', regex: typeIn, options: 'i' } } }
+          const $addFields = { matched: { $regexMatch: { input: { $toString: '$產品名稱' }, regex: typeIn, options: 'i' } } }
           props.unshift({ $addFields  })
           Object.assign($match, { matched: true })
         }
@@ -884,7 +884,7 @@ module.exports = function () {
     MongoClient.connect('mongodb://127.0.0.1:27017', { useUnifiedTopology: true }, function (err0, client) {
       try {
         const { typeIn, item, productClass, productSubclass } = req.body
-        const $addFields = { matched: { $regexMatch: { input: `$${item.label}`, regex: typeIn, options: 'i' } } }
+        const $addFields = { matched: { $regexMatch: { input: { $toString: `$${item.label}` }, regex: typeIn, options: 'i' } } }
         const $match = Object.fromEntries ([
           ['matched', true], [productClass.label, productClass.value], [productSubclass.label, productSubclass.value]
         ])

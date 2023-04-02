@@ -19,8 +19,8 @@ const routes = [
         component: () => import('pages/invoiceRecord/Index.vue')
       },
       {
-        path: '/進銷項表單',
-        name: '進銷項表單',
+        path: '/歷史進銷查詢',
+        name: '歷史進銷查詢',
         component: () => import('pages/invoiceSheet/Index.vue')
       },
       {
@@ -29,8 +29,8 @@ const routes = [
         component: () => import('pages/materialsList/Index.vue')
       },
       {
-        path: '/材料資料',
-        name: '材料資料',
+        path: '/材料資料管理',
+        name: '材料資料管理',
         component: () => import('pages/materialsInform/materialsInformRecord.vue')
       },
       {

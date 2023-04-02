@@ -60,18 +60,18 @@ export default {
       generalTableLoading: false,
       selected: [],
       columns: [
-        { name: 'purchaseSalesItem', label: '進銷項', field: 'purchaseSalesItem', align: 'center' },
-        { name: 'year', label: '期年', field: 'year', align: 'center' },
-        { name: 'months', label: '期數', field: 'months', align: 'center' },
-        { name: 'firm', label: '公司名稱', field: 'firm', align: 'center' },
-        { name: 'invoiceNumber', label: '發票號', field: 'invoiceNumber', align: 'center' },
-        { name: 'date', label: '時間', field: 'date', align: 'center' },
-        { name: 'taxIdNumbers', label: '統編', field: 'taxIdNumbers', align: 'center' },
-        { name: 'salesFigures', label: '銷售額', field: 'salesFigures', align: 'center', format: val => `$${numberWithCommas(Math.round(val))}` },
-        { name: 'tax', label: '稅金', field: 'tax', align: 'center', format: val => `$${numberWithCommas(Math.round(val))}` },
-        { name: 'summary', label: '總額', field: 'summary', align: 'center', format: val => `$${numberWithCommas(Math.round(val))}` },
-        { name: 'invoiceType', label: '發票種類', field: 'invoiceType', align: 'center' },
-        { name: 'remark', label: '備註', field: 'remark', align: 'center' }
+        { name: 'purchaseSalesItem', label: '進銷項', field: 'purchaseSalesItem', align: 'center', style: row => rowColor(row) },
+        { name: 'year', label: '期年', field: 'year', align: 'center', style: row => rowColor(row) },
+        { name: 'months', label: '期數', field: 'months', align: 'center', style: row => rowColor(row) },
+        { name: 'firm', label: '公司名稱', field: 'firm', align: 'center', style: row => rowColor(row) },
+        { name: 'invoiceNumber', label: '發票號', field: 'invoiceNumber', align: 'center', style: row => rowColor(row) },
+        { name: 'date', label: '時間', field: 'date', align: 'center', style: row => rowColor(row) },
+        { name: 'taxIdNumbers', label: '統編', field: 'taxIdNumbers', align: 'center', style: row => rowColor(row) },
+        { name: 'salesFigures', label: '銷售額', field: 'salesFigures', align: 'center', format: val => `$${numberWithCommas(Math.round(val))}`, style: row => rowColor(row) },
+        { name: 'tax', label: '稅金', field: 'tax', align: 'center', format: val => `$${numberWithCommas(Math.round(val))}`, style: row => rowColor(row) },
+        { name: 'summary', label: '總額', field: 'summary', align: 'center', format: val => `$${numberWithCommas(Math.round(val))}`, style: row => rowColor(row) },
+        { name: 'invoiceType', label: '發票種類', field: 'invoiceType', align: 'center', style: row => rowColor(row) },
+        { name: 'remark', label: '備註', field: 'remark', align: 'center', style: row => rowColor(row) }
       ],
       numberWithCommas,
       pagination: {}
@@ -126,5 +126,11 @@ export default {
       this.selected = this.generalDataItemSelected
     }
   }
+}
+function rowColor (row) {
+  let style = ''
+  const { purchaseSalesItem, salesFigures, tax } = row
+  if (purchaseSalesItem === '銷項') style += 'background-color: #bdbdbd; '
+  return salesFigures * 0.05 - tax > 1 || salesFigures * 0.05 - tax < -1 ? style + 'color: red ' : style
 }
 </script>

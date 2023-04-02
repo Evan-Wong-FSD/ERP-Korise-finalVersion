@@ -3,15 +3,15 @@ const mongodb = require('mongodb')
 const MongoClient = mongodb.MongoClient
 
 const workbook = new ExcelJS.Workbook()
-const filename = '/Volumes/ADATA UFD/卓面/瑋安企業/料號管理/產品種類.xlsx'
-// const filename = '/Volumes/ADATA UFD/卓面/瑋安企業/料號管理/classifyMaterialSerialNumbers/2021-2023發票資料/待補資料/產品種類-1.xlsx'
+// const filename = '/Volumes/ADATA UFD/卓面/瑋安企業/料號管理/產品種類.xlsx'
+const filename = '/Volumes/ADATA UFD/卓面/瑋安企業/料號管理/classifyMaterialSerialNumbers/2021-2023發票資料/待補資料/產品種類-1.xlsx'
 
 const ProductClassifications = []
 
 ;(async () => {
   await workbook.xlsx.readFile(filename)
   createProductClassification()
-  // console.log(ProductClassifications)
+  console.log(ProductClassifications)
   MongoClient.connect('mongodb://127.0.0.1:27017', { useUnifiedTopology: true }, async function (err0, client) {
     try {
       // await client.db('ERP').collection('ProductClassification').deleteMany({})

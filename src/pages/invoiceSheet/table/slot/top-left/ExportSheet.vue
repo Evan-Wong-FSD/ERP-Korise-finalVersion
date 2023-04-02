@@ -25,7 +25,7 @@ export default {
     return {
       // worsksheetData: null,
       // worsksheetColumns: null,
-      // worsksheetName: `進銷項表單 ${date.formatDate(Date.parse(new Date()), 'YYYY-MM-DD HH:mm:ss')}`
+      // worsksheetName: `歷史進銷查詢 ${date.formatDate(Date.parse(new Date()), 'YYYY-MM-DD HH:mm:ss')}`
     }
   },
   computed: {
@@ -57,8 +57,8 @@ export default {
         // const formatTime = (time) => time < 10 ? '0' + time : time
         const formatTime = (time) => String(time).replace(/^\d{1}$/, '0' + time)
         link.href = downloadUrl
-        // link.download = `進銷項表單 ${formatTime(getYear)}${formatTime(getMonth)}${formatTime(getDate)}-${formatTime(getHours)}${formatTime(getMinutes)}${formatTime(getSeconds)}.xlsx`
-        link.download = `進銷項表單 ${formatTime(year)}${formatTime(month)}${formatTime(date)}-${formatTime(hours)}${formatTime(minutes)}${formatTime(seconds)}.xlsx`
+        // link.download = `歷史進銷查詢 ${formatTime(getYear)}${formatTime(getMonth)}${formatTime(getDate)}-${formatTime(getHours)}${formatTime(getMinutes)}${formatTime(getSeconds)}.xlsx`
+        link.download = `歷史進銷查詢 ${formatTime(year)}${formatTime(month)}${formatTime(date)}-${formatTime(hours)}${formatTime(minutes)}${formatTime(seconds)}.xlsx`
         document.body.appendChild(link)
         link.click()
         link.remove()

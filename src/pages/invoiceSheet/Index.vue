@@ -2,7 +2,7 @@
   <div class="my-font-medium">
     <header class="row justify-between q-px-lg q-pt-lg">
       <div>
-        <h1 class="text-h4 text-grey-10 text-center">進銷項表單</h1>
+        <h1 class="text-h4 text-grey-10 text-center">歷史進銷查詢</h1>
         <div style="width: 215.124px; border-top: 6px solid #00bcd4; width: 215.124px; margin-top: 10px;" />
       </div>
     </header>

@@ -1,6 +1,6 @@
 <template>
   <section class="row q-gutter-x-md">
-    <q-btn color="white" text-color="black" label="下載" @click="exportPdfFile" />
+    <q-btn color="white" text-color="black" label="下載PDF" @click="exportPdfFile" />
     <q-btn color="white" text-color="black" label="更新" @click="shouldResetSearch ? openResetSearchDialog(onUpdate) : onUpdate()" />
     <q-btn color="warning" text-color="grey-1" label="重設" @click="onReset" />
     <q-btn color="negative" text-color="grey-1" label="刪除" @click="shouldResetSearch ? openResetSearchDialog(openDeleteDialog) : openDeleteDialog()" />
