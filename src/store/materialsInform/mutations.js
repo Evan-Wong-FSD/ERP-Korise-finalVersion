@@ -102,7 +102,12 @@ const resetSearchingColumns = (state) => {
 
 const updateOptionClicked = (state, value) => {
   const { label, selected } = value
-  state.searchOptionClicked = selected ? label : null
+  if (selected) {
+    state.searchOptionClicked = label
+  } else {
+    const searchingColumnSelected = state.searchingColumns.find(elem => elem.selected)
+    state.searchOptionClicked = searchingColumnSelected ? searchingColumnSelected.label : null
+  }
 }
 
 const resetOptionClicked = (state) => {

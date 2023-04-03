@@ -62,7 +62,12 @@ export default {
     },
     selectLabelClicked () {
       const selectOnTypeIn = this.treeSearchNodeSelect.find(select => select.onTypeIn)
-      return selectOnTypeIn ? selectOnTypeIn.label : null
+      if (selectOnTypeIn) {
+        return selectOnTypeIn.label
+      } else {
+        const anotherSelected = this.treeSearchNodeSelect.find(select => select.value)
+        return anotherSelected ? anotherSelected.label : null
+      }
     },
     treeSearchNodeSelectOnTypeIn () {
       return this.treeSearchNodeSelect.find(select => select.onTypeIn)
